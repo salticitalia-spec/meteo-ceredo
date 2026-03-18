@@ -21,24 +21,25 @@ def get_weather_icon(code):
     return f'<span class="weather-icon">{icon}</span>'
 
 def get_santo(data_obj):
+    # I santi del Mostro Bovino
     santi = {"03-15": "S. Zaccaria", "03-16": "S. Eriberto", "03-17": "S. Patrizio", "03-18": "S. Cirillo", "03-19": "S. Giuseppe", "03-20": "S. Claudia", "03-21": "S. Benedetto", "03-22": "S. Lea", "03-23": "S. Turibio"}
     return santi.get(data_obj.strftime("%m-%d"), "S. del Giorno")
 
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS ---
+# --- 3. CSS (Icone 80px e Radar) ---
 style_css = "<style>"
 style_css += ".stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color:#000000 !important; }"
 style_css += ".main-card { border:1px solid #333; border-radius:20px; padding:20px; margin-bottom:15px; text-align:center; background:#000000 !important; }"
 style_css += ".header-text { color:#00FFFF !important; font-weight:100 !important; letter-spacing:7px; text-transform:uppercase; font-size:26px; text-align:center; margin:20px 0; }"
 style_css += "@keyframes rotate { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }"
 style_css += "@keyframes pulse { 0% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(1.05); } 100% { opacity:1; transform:scale(1); } }"
-style_css += ".weather-icon { display:inline-block; font-size:70px; margin:10px 0; }"
+style_css += ".weather-icon { display:inline-block; font-size:80px; margin:10px 0; }"
 style_css += ".sun-ani { animation:rotate 12s linear infinite; }"
 style_css += ".rain-ani { animation:pulse 1s ease-in-out infinite; }"
-style_css += ".rain-info-box { border:1px solid #FF3311; border-radius:10px; padding:8px; margin:10px 0; font-weight:bold; font-size:14px; }"
-style_css += ".daily-rain { font-size:11px; font-weight:bold; margin-top:5px; height:15px; }"
+style_css += ".rain-time-display { font-weight:bold; font-size:24px; margin-bottom:15px; }"
+style_css += "iframe { border-radius: 15px; border: 1px solid #333; }"
 style_css += "</style>"
 st.markdown(style_css, unsafe_allow_html=True)
 
@@ -72,13 +73,12 @@ def check_rain_for_day(target_date):
 msg_oggi = check_rain_for_day(now)
 colore_oggi = "#00FF00" if "Asciutto" in msg_oggi else "#FF3311"
 if dfc['current_weather']['weathercode'] in [51, 53, 55, 61, 63, 65, 80, 81, 82]:
-    msg_oggi = "⚠️ PIOVE ORA"
+    msg_oggi = "PIOVE ORA"
     colore_oggi = "#FF0000"
 
-# --- 6. INTERFACCIA OGGI ---
+# --- 6. INTERFACCIA PRINCIPALE ---
 st.markdown('<div class="header-text">Ceredoleso PRO</div>', unsafe_allow_html=True)
 curr = dfc['current_weather']
-c_temp, c_hum = curr['temperature'], dfc['hourly']['relativehumidity_2m'][now.hour]
 
 st.markdown(f'''
 <div class="main-card">
@@ -87,14 +87,21 @@ st.markdown(f'''
     </div>
     <div style="color:#00FFFF; font-size:11px; margin-top:5px;">✨ {get_santo(now)}</div>
     <div>{get_weather_icon(curr['weathercode'])}</div>
-    <div class="rain-info-box" style="color:{colore_oggi}; border-color:{colore_oggi};">
-        RAIN: {msg_oggi}
+    <div class="rain-time-display" style="color:{colore_oggi};">
+        {msg_oggi if msg_oggi != "Asciutto" else ""}
     </div>
-    <div style="font-size:55px; font-weight:bold; color:white;">{c_temp}°</div>
+    <div style="font-size:60px; font-weight:bold; color:white;">{curr['temperature']}°</div>
 </div>
 ''', unsafe_allow_html=True)
 
-# --- 7. MOSTRO BOVINO ---
+# --- 7. RADAR METEO LIVE ---
+st.markdown('<div style="color:#666; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">RADAR PRECIPITAZIONI LIVE</div>', unsafe_allow_html=True)
+# Radar RainViewer centrato su Ceredo
+radar_url = "https://www.rainviewer.com/map.html?loc=45.6117,10.971,9&type=radar&range=false&useRound=true&useStep=true&pType=all&fullScreen=false&isTab=true&logo=false&isPrecip=true&isCurrent=false&pastHours=1&nextHours=0"
+st.components.v1.iframe(radar_url, height=350)
+
+# --- 8. MOSTRO BOVINO ---
+st.write("")
 if dhi and 'hourly' in dhi:
     carico = sum(dhi['hourly']['precipitation'][-168:]) 
     if carico < 5: m_t, m_c, m_d = "SECCO ☀️", "#00FFFF", "🟢 Ottimo ovunque"
@@ -109,7 +116,7 @@ if dhi and 'hourly' in dhi:
     </div>
     ''', unsafe_allow_html=True)
 
-# --- 8. TENDENZA 3 GIORNI CON ORARI ---
+# --- 9. TENDENZA 3 GIORNI ---
 cols = st.columns(3)
 for i in range(1, 4):
     with cols[i-1]:
@@ -120,12 +127,11 @@ for i in range(1, 4):
         st.markdown(f'''
         <div class="main-card" style="padding:15px; border-color:#222;">
             <div style="font-size:11px; color:white; font-weight:bold;">{giorni_ita[d_f.weekday()][:3].upper()} {d_f.day}</div>
-            <div style="font-size:8px; color:#00FFFF; margin-top:2px;">{get_santo(d_f)}</div>
             <div>{get_weather_icon(dfc['daily']['weathercode'][i])}</div>
-            <div class="daily-rain" style="color:{rain_color};">
-                {rain_time}
+            <div style="font-size:13px; font-weight:bold; color:{rain_color}; margin:5px 0;">
+                {rain_time if rain_time != "Asciutto" else ""}
             </div>
-            <div style="font-size:22px; font-weight:bold; color:white; margin-top:5px;">{dfc['daily']['temperature_2m_max'][i]}°</div>
+            <div style="font-size:22px; font-weight:bold; color:white;">{dfc['daily']['temperature_2m_max'][i]}°</div>
         </div>
         ''', unsafe_allow_html=True)
 
