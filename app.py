@@ -87,31 +87,31 @@ if hi_data and 'daily' in hi_data:
     fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=220, margin=dict(l=0, r=0, t=5, b=0), showlegend=False, yaxis=dict(showgrid=False), yaxis2=dict(overlaying="y", side="right", showgrid=False), xaxis=dict(showgrid=False))
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# --- 8. OROLOGIO AZTECO (METODO STRINGA SICURA) ---
+# --- 8. OROLOGIO AZTECO (COSTRUZIONE SICURA) ---
 now = datetime.now()
 h, m, s = now.hour, now.minute, now.second
 
-# Valori esatti dal tuo SVG
+# Valori esatti circonferenza
 c_h = 289.02652413026095
 c_m = 251.32741228718345
 c_s = 213.62830044410595
 
-# Calcolo offset basato sul tempo reale
+# Calcolo offset
 o_h = c_h - ((h % 24 + m/60) * c_h / 24)
 o_m = c_m - ((m + s/60) * c_m / 60)
 o_s = c_s - (s * c_s / 60)
 
-# Costruzione HTML con stringhe singole per evitare SyntaxError
-h1 = '<div class="aztec-wrapper">'
-h2 = f'<div class="digital-clock">{now.strftime("%H:%M")}<span style="font-size:18px; color:#FF3311;">:{s:02d}</span></div>'
-h3 = '<svg class="rings-svg" viewBox="0 0 100 100">'
-h4 = f'<circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2.5" stroke-dasharray="{c_h}" stroke-dashoffset="{o_h}" opacity="0.5"/>'
-h5 = f'<circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2.5" stroke-dasharray="{c_m}" stroke-dashoffset="{o_m}" opacity="0.6"/>'
-h6 = f'<circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2.5" stroke-dasharray="{c_s}" stroke-dashoffset="{o_s}" opacity="0.8"/>'
-h7 = '</svg></div>'
-h8 = '<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace; font-weight:bold;">TIEMPO ETERNO DE CEREDO</div>'
+# Concatenazione stringhe per evitare SyntaxError
+clock_html = '<div class="aztec-wrapper">'
+clock_html += f'<div class="digital-clock">{now.strftime("%H:%M")}<span style="font-size:18px; color:#FF3311;">:{s:02d}</span></div>'
+clock_html += '<svg class="rings-svg" viewBox="0 0 100 100">'
+clock_html += f'<circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2.5" stroke-dasharray="{c_h}" stroke-dashoffset="{o_h}" opacity="0.5"/>'
+clock_html += f'<circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2.5" stroke-dasharray="{c_m}" stroke-dashoffset="{o_m}" opacity="0.6"/>'
+clock_html += f'<circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2.5" stroke-dasharray="{c_s}" stroke-dashoffset="{o_s}" opacity="0.8"/>'
+clock_html += '</svg></div>'
+clock_html += '<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace; font-weight:bold;">TIEMPO ETERNO DE CEREDO</div>'
 
-st.markdown(h1 + h2 + h3 + h4 + h5 + h6 + h7 + h8, unsafe_allow_html=True)
+st.markdown(clock_html, unsafe_allow_html=True)
 
 # Loop refresh
 time.sleep(1)
