@@ -37,7 +37,7 @@ st.markdown("""
     .legend-container { display: flex; justify-content: space-around; background: #111; padding: 10px; border-radius: 10px; border: 1px solid #222; margin-bottom: 5px; }
     .legend-item { text-align: center; font-family: monospace; font-weight: bold; font-size: 11px; }
     .aztec-wrapper {
-        position: relative; width: 300px; height: 300px; margin: 30px auto; border-radius: 50%;
+        position: relative; width: 320px; height: 320px; margin: 30px auto; border-radius: 50%;
         background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png');
         background-size: cover; background-position: center; border: 4px solid #222;
         box-shadow: inset 0 0 80px #000, 0 0 40px #111; display: flex; align-items: center; justify-content: center;
@@ -45,7 +45,7 @@ st.markdown("""
     }
     .digital-clock {
         background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 12px; color: white;
-        font-family: 'Courier New', monospace; font-size: 28px; font-weight: bold; z-index: 10;
+        font-family: 'Courier New', monospace; font-size: 30px; font-weight: bold; z-index: 10;
         border: 1px solid #333; text-shadow: 0 0 15px #00FFFF;
     }
     .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); pointer-events: none; }
@@ -87,28 +87,31 @@ if hi_data and 'daily' in hi_data:
     fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=220, margin=dict(l=0, r=0, t=5, b=0), showlegend=False, yaxis=dict(showgrid=False), yaxis2=dict(overlaying="y", side="right", showgrid=False), xaxis=dict(showgrid=False))
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# --- 8. OROLOGIO AZTECO FUNZIONALE ---
-# 
+# --- 8. OROLOGIO AZTECO (METODO STRINGA SICURA) ---
 now = datetime.now()
 h, m, s = now.hour, now.minute, now.second
 
-# Calcoli matematici fuori dalla stringa per sicurezza
-c_h, c_m, c_s = 289.02, 251.32, 213.62
+# Valori esatti dal tuo SVG
+c_h = 289.02652413026095
+c_m = 251.32741228718345
+c_s = 213.62830044410595
+
+# Calcolo offset basato sul tempo reale
 o_h = c_h - ((h % 24 + m/60) * c_h / 24)
 o_m = c_m - ((m + s/60) * c_m / 60)
 o_s = c_s - (s * c_s / 60)
 
-# Costruzione stringa HTML in modo ultra-sicuro
-html_clock = '<div class="aztec-wrapper">'
-html_clock += f'<div class="digital-clock">{now.strftime("%H:%M")}<span style="font-size:18px; color:#FF3311;">:{s:02d}</span></div>'
-html_clock += '<svg class="rings-svg" viewBox="0 0 100 100">'
-html_clock += f'<circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2.5" stroke-dasharray="{c_h}" stroke-dashoffset="{o_h}" opacity="0.5"/>'
-html_clock += f'<circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2.5" stroke-dasharray="{c_m}" stroke-dashoffset="{o_m}" opacity="0.6"/>'
-html_clock += f'<circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2.5" stroke-dasharray="{c_s}" stroke-dashoffset="{o_s}" opacity="0.8"/>'
-html_clock += '</svg></div>'
-html_clock += '<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace; font-weight:bold;">TIEMPO ETERNO DE CEREDO</div>'
+# Costruzione HTML con stringhe singole per evitare SyntaxError
+h1 = '<div class="aztec-wrapper">'
+h2 = f'<div class="digital-clock">{now.strftime("%H:%M")}<span style="font-size:18px; color:#FF3311;">:{s:02d}</span></div>'
+h3 = '<svg class="rings-svg" viewBox="0 0 100 100">'
+h4 = f'<circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2.5" stroke-dasharray="{c_h}" stroke-dashoffset="{o_h}" opacity="0.5"/>'
+h5 = f'<circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2.5" stroke-dasharray="{c_m}" stroke-dashoffset="{o_m}" opacity="0.6"/>'
+h6 = f'<circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2.5" stroke-dasharray="{c_s}" stroke-dashoffset="{o_s}" opacity="0.8"/>'
+h7 = '</svg></div>'
+h8 = '<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace; font-weight:bold;">TIEMPO ETERNO DE CEREDO</div>'
 
-st.markdown(html_clock, unsafe_allow_html=True)
+st.markdown(h1 + h2 + h3 + h4 + h5 + h6 + h7 + h8, unsafe_allow_html=True)
 
 # Loop refresh
 time.sleep(1)
