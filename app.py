@@ -15,33 +15,38 @@ def fetch_all_data():
     end = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     start = (datetime.now() - timedelta(days=15)).strftime('%Y-%m-%d')
     url_hi = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&start_date={start}&end_date={end}&daily=precipitation_sum,wind_speed_10m_max,shortwave_radiation_sum&timezone=Europe%2FRome"
-    return requests.get(url_fc).json(), requests.get(hi_url := url_hi).json()
+    return requests.get(url_fc).json(), requests.get(url_hi).json()
 
-def get_aztec_date():
-    # 20 Simboli dei Giorni
+def get_aztec_full_date():
     symbols = ["Cipactli", "Ehecatl", "Calli", "Cuetzpalin", "Coatl", "Miquiztli", "Mazatl", "Tochtli", 
                "Atl", "Itzcuintli", "Ozomatli", "Malinalli", "Acatl", "Ocelotl", "Quauhtli", "Cozcaquauhtli", 
                "Olin", "Tecpatl", "Quiahuitl", "Xochitl"]
     
-    # 18 Mesi del Calendario Solare (Xiuhpohualli)
     months = ["Izcalli", "Atlcahualo", "Tlacaxipehualiztli", "Tozoztontli", "Huey Tozoztli", "Toxcatl", 
               "Etzalcualiztli", "Tecuilhuitontli", "Huey Tecuilhuitl", "Tlaxochimaco", "Xocotl Huetzi", 
               "Ochpaniztli", "Teotleco", "Tepeilhuitl", "Quecholli", "Panquetzaliztli", "Atemoztli", "Tititl"]
+    
+    years = ["Acatl (Canna)", "Tecpatl (Coltello)", "Calli (Casa)", "Tochtli (Coniglio)"]
 
-    ref_date = datetime(2024, 1, 1)
+    ref_date = datetime(2024, 1, 1) # 2024 era 12-Acatl
     today = datetime.now()
     delta_days = (today - ref_date).days
     
-    # Calcolo Giorno Sacro (Tonalpohualli)
+    # Giorno (Tonalpohualli)
     num_sacro = (delta_days % 13) + 1
     simbolo_sacro = symbols[(delta_days + 12) % 20]
     
-    # Calcolo Mese Solare (Xiuhpohualli - approssimativo su ciclo 365)
+    # Mese (Xiuhpohualli)
     day_of_year = today.timetuple().tm_yday
     month_idx = min(int(day_of_year / 20), 17)
-    current_month = months[month_idx]
     
-    return f"{num_sacro} {simbolo_sacro}", current_month
+    # Anno (Ciclo 52 anni)
+    # 2024 = 12 Acatl, 2025 = 13 Tecpatl, 2026 = 1 Tochtli
+    current_year_val = today.year
+    year_num = ((current_year_val - 2024 + 11) % 13) + 1
+    year_symbol = years[(current_year_val - 2024) % 4]
+    
+    return f"{num_sacro} {simbolo_sacro}", months[month_idx], f"{year_num} {year_symbol}"
 
 # --- 2. STILE CSS ---
 st.markdown("""
@@ -67,24 +72,23 @@ st.markdown("""
     .footer-label { text-align: center; color: #555; font-size: 11px; font-family: monospace; letter-spacing: 6px; font-weight: bold; margin-top: -5px; }
     .aztec-info-box { text-align: center; margin-top: 10px; margin-bottom: 40px; }
     .aztec-day { color: #840; font-size: 14px; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; }
-    .aztec-month { color: #555; font-size: 10px; font-family: monospace; letter-spacing: 2px; }
+    .aztec-meta { color: #555; font-size: 10px; font-family: monospace; letter-spacing: 1px; margin-top: 3px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. DATI E UI ---
+# --- 3. UI E LOGICA ---
 fc, hi = fetch_all_data()
 st.markdown('<div class="header-text">Ceredoleso Sniper</div>', unsafe_allow_html=True)
 
 # Radar
-radar_src = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true"
-st.markdown(f'<div class="radar-box"><div class="crosshair"><div class="dot"></div></div><iframe src="{radar_src}" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="radar-box"><div class="crosshair"><div class="dot"></div></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
 # Timeline 12h
 if fc and 'hourly' in fc:
     cols = st.columns(6)
-    h_start = datetime.now().hour
+    h_now = datetime.now().hour
     for i in range(12):
-        idx = h_start + i
+        idx = h_now + i
         if idx < len(fc['hourly']['time']):
             with cols[i % 6]:
                 p = fc['hourly']['precipitation_probability'][idx]
@@ -92,24 +96,23 @@ if fc and 'hourly' in fc:
                 <b style="color:white">{fc['hourly']['temperature_2m'][idx]}°</b><br>
                 <span style="color:{'#F31' if p > 30 else '#0F0'}">{p}%</span></div>""", unsafe_allow_html=True)
 
-# Grafico Storico
+# Grafico
 if hi and 'daily' in hi:
     df = pd.DataFrame({'D': hi['daily']['time'], 'P': hi['daily']['precipitation_sum'], 'V': hi['daily']['wind_speed_10m_max']})
     fig = go.Figure()
     fig.add_trace(go.Bar(x=df['D'], y=df['P'], marker_color='#007FFF'))
     fig.add_trace(go.Scatter(x=df['D'], y=df['V'], line=dict(color='#FF3311', width=2)))
-    fig.update_layout(template="plotly_dark", height=180, margin=dict(l=0,r=0,t=10,b=0), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
+    fig.update_layout(template="plotly_dark", height=160, margin=dict(l=0,r=0,t=10,b=0), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# Orologio e Calendario Azteco
+# Orologio e Data Completa
 n = datetime.now()
 s = n.second
-c_h, c_m, c_s = 289.02, 251.32, 213.62
-off_h = c_h - (((n.hour % 24) + n.minute/60) * c_h / 24)
-off_m = c_m - ((n.minute + s/60) * c_m / 60)
-off_s = c_s - (s * c_s / 60)
+off_h = 289.02 - (((n.hour % 24) + n.minute/60) * 289.02 / 24)
+off_m = 251.32 - ((n.minute + s/60) * 251.32 / 60)
+off_s = 213.62 - (s * 213.62 / 60)
 
-day_label, month_label = get_aztec_date()
+day_lab, month_lab, year_lab = get_aztec_full_date()
 
 st.markdown(f"""
 <div class="aztec-wrapper">
@@ -122,8 +125,8 @@ st.markdown(f"""
 </div>
 <div class="footer-label">TIEMPO ETERNO DE CEREDO</div>
 <div class="aztec-info-box">
-    <div class="aztec-day">{day_label}</div>
-    <div class="aztec-month">MES DE {month_label}</div>
+    <div class="aztec-day">{day_lab}</div>
+    <div class="aztec-meta">MESE: {month_lab} | ANNO: {year_lab}</div>
 </div>
 """, unsafe_allow_html=True)
 
