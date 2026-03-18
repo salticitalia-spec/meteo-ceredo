@@ -8,12 +8,10 @@ from datetime import datetime, timedelta
 st.set_page_config(page_title="Meteo Ceredoleso Pro", page_icon="🧗", layout="centered")
 
 # --- 2. FUNZIONI E SANTI ---
-def get_weather_icon(code, is_main=False):
+def get_weather_icon(code):
     pioggia_codes = [51, 53, 55, 61, 63, 65, 80, 81, 82]
     icons = {0: "☀️", 1: "☀️", 2: "⛅", 3: "☁️", 45: "🌫️", 51: "🌧️", 61: "🌧️", 95: "⚡"}
     icon = icons.get(code, "☁️")
-    
-    # Classe CSS unica per tutte le icone per uniformare la grandezza
     if code in pioggia_codes:
         return f'<span class="weather-icon rain-ani" style="color:#FF0000;filter:drop-shadow(0 0 8px #FF0000);">🌧️</span>'
     if icon in ["🌧️", "☁️", "⛅"]:
@@ -29,17 +27,18 @@ def get_santo(data_obj):
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS (Icone uniformate a 70px) ---
+# --- 3. CSS ---
 style_css = "<style>"
 style_css += ".stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color:#000000 !important; }"
 style_css += ".main-card { border:1px solid #333; border-radius:20px; padding:20px; margin-bottom:15px; text-align:center; background:#000000 !important; }"
 style_css += ".header-text { color:#00FFFF !important; font-weight:100 !important; letter-spacing:7px; text-transform:uppercase; font-size:26px; text-align:center; margin:20px 0; }"
 style_css += "@keyframes rotate { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }"
 style_css += "@keyframes pulse { 0% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(1.05); } 100% { opacity:1; transform:scale(1); } }"
-style_css += ".weather-icon { display:inline-block; font-size:70px; margin:15px 0; }"
+style_css += ".weather-icon { display:inline-block; font-size:70px; margin:10px 0; }"
 style_css += ".sun-ani { animation:rotate 12s linear infinite; }"
 style_css += ".rain-ani { animation:pulse 1s ease-in-out infinite; }"
-style_css += ".rain-info-box { border:1px solid #FF3311; border-radius:10px; padding:10px; margin:10px 0; font-weight:bold; font-size:15px; }"
+style_css += ".rain-info-box { border:1px solid #FF3311; border-radius:10px; padding:8px; margin:10px 0; font-weight:bold; font-size:14px; }"
+style_css += ".daily-rain { font-size:11px; font-weight:bold; margin-top:5px; height:15px; }"
 style_css += "</style>"
 st.markdown(style_css, unsafe_allow_html=True)
 
@@ -62,23 +61,21 @@ if not dfc: st.stop()
 now = datetime.now()
 h_times = dfc['hourly']['time']
 h_prec = dfc['hourly']['precipitation']
-msg_pioggia = "CIELO ASCIUTTO NELLE 24H"
-colore_msg = "#00FF00"
 
-if dfc['current_weather']['weathercode'] in [51, 53, 55, 61, 63, 65, 80, 81, 82]:
-    msg_pioggia = "⚠️ PIOVE ORA"
-    colore_msg = "#FF0000"
-else:
+def check_rain_for_day(target_date):
     for t, p in zip(h_times, h_prec):
         dt_t = datetime.fromisoformat(t)
-        if dt_t > now and p > 0.1:
-            ora = dt_t.strftime('%H:00')
-            giorno = "OGGI" if dt_t.day == now.day else "DOMANI"
-            msg_pioggia = f"🌧️ INIZIO: {giorno} {ora}"
-            colore_msg = "#FF3311"
-            break
+        if dt_t.date() == target_date.date() and dt_t >= now and p > 0.1:
+            return f"Ore {dt_t.strftime('%H:00')}"
+    return "Asciutto"
 
-# --- 6. INTERFACCIA PRINCIPALE ---
+msg_oggi = check_rain_for_day(now)
+colore_oggi = "#00FF00" if "Asciutto" in msg_oggi else "#FF3311"
+if dfc['current_weather']['weathercode'] in [51, 53, 55, 61, 63, 65, 80, 81, 82]:
+    msg_oggi = "⚠️ PIOVE ORA"
+    colore_oggi = "#FF0000"
+
+# --- 6. INTERFACCIA OGGI ---
 st.markdown('<div class="header-text">Ceredoleso PRO</div>', unsafe_allow_html=True)
 curr = dfc['current_weather']
 c_temp, c_hum = curr['temperature'], dfc['hourly']['relativehumidity_2m'][now.hour]
@@ -90,14 +87,10 @@ st.markdown(f'''
     </div>
     <div style="color:#00FFFF; font-size:11px; margin-top:5px;">✨ {get_santo(now)}</div>
     <div>{get_weather_icon(curr['weathercode'])}</div>
-    <div class="rain-info-box" style="color:{colore_msg}; border-color:{colore_msg};">
-        {msg_pioggia}
+    <div class="rain-info-box" style="color:{colore_oggi}; border-color:{colore_oggi};">
+        RAIN: {msg_oggi}
     </div>
     <div style="font-size:55px; font-weight:bold; color:white;">{c_temp}°</div>
-    <div style="display:flex; justify-content:center; gap:25px; margin-top:15px; color:#00FF00; font-weight:bold; font-size:14px;">
-        <span>💨 {curr['windspeed']} kph</span>
-        <span style="color:#FFFF00;">💧 {c_hum}%</span>
-    </div>
 </div>
 ''', unsafe_allow_html=True)
 
@@ -111,21 +104,28 @@ if dhi and 'hourly' in dhi:
     st.markdown(f'''
     <div style="border:1px solid {m_c}; padding:15px; border-radius:15px; text-align:center; background:black; margin-bottom:20px;">
         <div style="font-size:9px; color:#666; letter-spacing:2px;">MOSTRO BOVINO INDEX</div>
-        <div style="font-size:22px; color:{m_c}; font-weight:bold; margin:3px 0;">{m_t}</div>
-        <div style="font-size:12px; color:#999;">{m_d}</div>
+        <div style="font-size:20px; color:{m_c}; font-weight:bold; margin:3px 0;">{m_t}</div>
+        <div style="font-size:11px; color:#999;">{m_d}</div>
     </div>
     ''', unsafe_allow_html=True)
 
-# --- 8. TENDENZA (Uniformata) ---
+# --- 8. TENDENZA 3 GIORNI CON ORARI ---
 cols = st.columns(3)
 for i in range(1, 4):
     with cols[i-1]:
         d_f = now + timedelta(days=i)
+        rain_time = check_rain_for_day(d_f)
+        rain_color = "#FF3311" if rain_time != "Asciutto" else "#00FF00"
+        
         st.markdown(f'''
         <div class="main-card" style="padding:15px; border-color:#222;">
             <div style="font-size:11px; color:white; font-weight:bold;">{giorni_ita[d_f.weekday()][:3].upper()} {d_f.day}</div>
+            <div style="font-size:8px; color:#00FFFF; margin-top:2px;">{get_santo(d_f)}</div>
             <div>{get_weather_icon(dfc['daily']['weathercode'][i])}</div>
-            <div style="font-size:22px; font-weight:bold; color:white;">{dfc['daily']['temperature_2m_max'][i]}°</div>
+            <div class="daily-rain" style="color:{rain_color};">
+                {rain_time}
+            </div>
+            <div style="font-size:22px; font-weight:bold; color:white; margin-top:5px;">{dfc['daily']['temperature_2m_max'][i]}°</div>
         </div>
         ''', unsafe_allow_html=True)
 
