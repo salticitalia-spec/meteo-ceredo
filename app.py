@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import plotly.graph_objects as go
 import time
+import math
 from datetime import datetime, timedelta
 
 # --- 1. CONFIGURAZIONE PAGINA ---
@@ -32,11 +33,10 @@ st.markdown("""
     .sniper-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: #FF0000; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 25px #FF0000; }
     iframe { width: 100%; height: 100%; border: none; }
 
-    /* LEGENDA E GRIGLIA STORICO */
     .legend-container { display: flex; justify-content: space-around; background: #111; padding: 10px; border-radius: 10px; border: 1px solid #222; margin-bottom: 5px; }
     .legend-item { text-align: center; font-family: monospace; font-weight: bold; font-size: 11px; }
 
-    /* OROLOGIO AZTECO DINAMICO VIA URL */
+    /* OROLOGIO AZTECO DINAMICO */
     .aztec-wrapper {
         position: relative;
         width: 320px;
@@ -51,15 +51,15 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: center;
-        filter: sepia(0.4) brightness(0.8) contrast(1.2);
+        filter: sepia(0.5) brightness(0.7) contrast(1.3);
     }
     .digital-clock {
-        background: rgba(0,0,0,0.75);
-        padding: 8px 18px;
-        border-radius: 10px;
+        background: rgba(0,0,0,0.8);
+        padding: 10px 20px;
+        border-radius: 12px;
         color: white;
         font-family: 'Courier New', monospace;
-        font-size: 30px;
+        font-size: 32px;
         font-weight: bold;
         z-index: 10;
         border: 1px solid #444;
@@ -122,22 +122,23 @@ if hi_data and 'daily' in hi_data:
     fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=280, margin=dict(l=0, r=0, t=5, b=0), showlegend=False, yaxis=dict(showgrid=False), yaxis2=dict(overlaying="y", side="right", showgrid=False), xaxis=dict(showgrid=False))
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# --- 8. OROLOGIO AZTECO FUNZIONALE VIA URL ---
+# --- 8. OROLOGIO AZTECO FUNZIONALE ---
 now = datetime.now()
 h, m, s = now.hour, now.minute, now.second
 
-# Calcolo Circonferenze (C=2*pi*r)
-def calc_offset(val, max_val, radius):
-    circ = 2 * 3.14159 * radius
-    return circ - (val * circ / max_val), circ
+# Calcolo Circonferenze Basate sul tuo SVG (2 * pi * r)
+circ_h = 2 * math.pi * 46  # 289.026
+circ_m = 2 * math.pi * 40  # 251.327
+circ_s = 2 * math.pi * 34  # 213.628
 
-off_h, circ_h = calc_offset(h % 24, 24, 46)
-off_m, circ_m = calc_offset(m, 60, 40)
-off_s, circ_s = calc_offset(s, 60, 34)
+# Calcolo Offset Dinamici
+off_h = circ_h - ((h % 24 + m/60) * circ_h / 24)
+off_m = circ_m - ((m + s/60) * circ_m / 60)
+off_s = circ_s - (s * circ_s / 60)
 
 st.markdown(f"""
 <div class="aztec-wrapper">
-    <div class="digital-clock">{now.strftime("%H:%M")}<span style="font-size:18px; color:#FF3311;">:{s:02d}</span></div>
+    <div class="digital-clock">{now.strftime("%H:%M")}<span style="font-size:20px; color:#FF3311;">:{s:02d}</span></div>
     
     <svg class="rings-svg" viewBox="0 0 100 100">
         <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2.5" 
@@ -150,11 +151,11 @@ st.markdown(f"""
             stroke-dasharray="{circ_s}" stroke-dashoffset="{off_s}" opacity="0.8"/>
     </svg>
 </div>
-<div style="text-align:center; color:#444; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace;">
+<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace;">
     TIEMPO ETERNO DE CEREDO
 </div>
 """, unsafe_allow_html=True)
 
-# Loop di aggiornamento
+# Riavvio per aggiornare i secondi
 time.sleep(1)
 st.rerun()
