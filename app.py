@@ -9,23 +9,16 @@ st.set_page_config(page_title="Meteo Ceredoleso Pro", page_icon="🧗", layout="
 
 # --- 2. FUNZIONI E SANTI ---
 def get_weather_icon(code):
-    # Codici pioggia: 51, 53, 55, 61, 63, 65, 80, 81, 82
     pioggia_codes = [51, 53, 55, 61, 63, 65, 80, 81, 82]
     icons = {0: "☀️", 1: "☀️", 2: "⛅", 3: "☁️", 45: "🌫️", 51: "🌧️", 61: "🌧️", 95: "⚡"}
     icon = icons.get(code, "☁️")
     
     if code in pioggia_codes:
-        # Nuvola Rossa Pulsante per la pioggia (Allarme)
         return f'<span class="rain-ani" style="color: #FF0000; filter: drop-shadow(0 0 5px #FF0000);">🌧️</span>'
-    
-    if icon == "🌧️" or icon == "☁️" or icon == "⛅":
-        # Nuvola Bianca per condizioni non piovose (Neutro)
+    if icon in ["🌧️", "☁️", "⛅"]:
         return f'<span style="color: #FFFFFF;">{icon}</span>'
-    
     if icon == "☀️":
-        # Sole Giallo/Bianco Ruotante
         return f'<span class="sun-ani">{icon}</span>'
-    
     return icon
 
 def calcola_percepita(T, rh):
@@ -39,7 +32,7 @@ def get_santo(data_obj):
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS "STAFFA DI SICUREZZA" ---
+# --- 3. CSS ---
 style_css = "<style>"
 style_css += ".stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color: #000000 !important; }"
 style_css += ".main-card { border: 1px solid #333; border-radius: 20px; padding: 25px; margin-bottom: 20px; text-align: center; background: #000000 !important; }"
@@ -49,7 +42,7 @@ style_css += "@keyframes rotate { from { transform: rotate(0deg); } to { transfo
 style_css += "@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }"
 style_css += ".sun-ani { display: inline-block; animation: rotate 12s linear infinite; font-size: 65px; }"
 style_css += ".rain-ani { display: inline-block; animation: pulse 1s ease-in-out infinite; font-size: 70px; }"
-style_css += "[data-testid='stChart'] { background-color: #080808 !important; border: 1px solid #222; border-radius: 10px; }"
+style_css += ".rain-time { color: #FF3311; font-size: 14px; font-weight: bold; margin-top: 10px; letter-spacing: 1px; }"
 style_css += "</style>"
 st.markdown(style_css, unsafe_allow_html=True)
 
@@ -68,16 +61,25 @@ def fetch_meteo_data():
 dfc, dhi = fetch_meteo_data()
 if not dfc: st.stop()
 
-# --- 5. INTERFACCIA OGGI ---
-st.markdown('<div class="header-text">Ceredoleso PRO</div>', unsafe_allow_html=True)
+# --- 5. CALCOLO INIZIO PIOGGIA ---
+now = datetime.now()
+h_times = dfc['hourly']['time']
+h_prec = dfc['hourly']['precipitation']
+prossima_pioggia = "Nessuna pioggia prevista"
 
-curr, now = dfc['current_weather'], datetime.now()
+for t, p in zip(h_times, h_prec):
+    dt_t = datetime.fromisoformat(t)
+    if dt_t > now and p > 0:
+        prossima_pioggia = f"Inizio pioggia: oggi ore {dt_t.strftime('%H:00')}"
+        if dt_t.day != now.day:
+            prossima_pioggia = f"Inizio pioggia: domani ore {dt_t.strftime('%H:00')}"
+        break
+
+# --- 6. INTERFACCIA OGGI ---
+st.markdown('<div class="header-text">Ceredoleso PRO</div>', unsafe_allow_html=True)
+curr = dfc['current_weather']
 c_temp, c_hum = curr['temperature'], dfc['hourly']['relativehumidity_2m'][now.hour]
 perc = calcola_percepita(c_temp, c_hum)
-
-alert_msg = ""
-if perc > 30: alert_msg = '<div class="status-alert">🔥 AFA ELEVATA</div>'
-elif c_hum > 75: alert_msg = '<div class="status-alert">⚠️ RISCHIO CONDENSA</div>'
 
 st.markdown(f'''
 <div class="main-card">
@@ -86,17 +88,17 @@ st.markdown(f'''
     </div>
     <div style="color:#00FFFF; font-size:11px; margin:8px 0;">✨ {get_santo(now)}</div>
     <div style="margin:15px 0;">{get_weather_icon(curr['weathercode'])}</div>
-    <div style="font-size:55px; font-weight:bold; color:white;">{c_temp}°</div>
+    <div class="rain-time">{prossima_pioggia}</div>
+    <div style="font-size:55px; font-weight:bold; color:white; margin-top:10px;">{c_temp}°</div>
     <div style="color:#FFFF00; font-size:14px;">Percepita: {perc}°</div>
     <div style="display:flex; justify-content:center; gap:25px; margin-top:20px; color:#00FF00; font-weight:bold; font-size:14px;">
         <span>💨 {curr['windspeed']} kph</span>
         <span style="color:#FFFF00;">💧 {c_hum}%</span>
     </div>
-    {alert_msg}
 </div>
 ''', unsafe_allow_html=True)
 
-# --- 6. MOSTRO BOVINO ---
+# --- 7. MOSTRO BOVINO ---
 if dhi and 'hourly' in dhi:
     carico = sum(dhi['hourly']['precipitation'][-168:]) 
     if carico < 5: m_t, m_c, m_d = "SECCO ☀️", "#00FFFF", "🟢 Ottimo ovunque"
@@ -111,9 +113,8 @@ if dhi and 'hourly' in dhi:
     </div>
     ''', unsafe_allow_html=True)
 
-# --- 7. TENDENZA 3 GIORNI ---
+# --- TENDENZA E GRAFICO ---
 st.write("")
-st.markdown('<div style="color:white; font-weight:100; letter-spacing:2px; text-align:center; font-size:12px; margin-bottom:15px;">PROSSIMI 3 GIORNI</div>', unsafe_allow_html=True)
 cols = st.columns(3)
 for i in range(1, 4):
     with cols[i-1]:
@@ -121,16 +122,11 @@ for i in range(1, 4):
         st.markdown(f'''
         <div class="main-card" style="padding:15px; border-color:#222;">
             <div style="font-size:11px; color:white; font-weight:bold;">{giorni_ita[d_f.weekday()][:3].upper()} {d_f.day}</div>
-            <div style="font-size:9px; color:#00FFFF; margin-top:4px;">{get_santo(d_f)}</div>
             <div style="font-size:35px; margin:10px 0;">{get_weather_icon(dfc['daily']['weathercode'][i])}</div>
             <div style="font-size:20px; font-weight:bold; color:white;">{dfc['daily']['temperature_2m_max'][i]}°</div>
-            <div style="font-size:10px; color:#666;">{dfc['daily']['precipitation_sum'][i]}mm</div>
         </div>
         ''', unsafe_allow_html=True)
 
-# --- 8. STORICO 10 GIORNI ---
-st.write("")
-st.markdown('<div style="color:white; font-weight:100; letter-spacing:2px; text-align:center; font-size:12px; margin-bottom:15px;">STORICO 10 GIORNI</div>', unsafe_allow_html=True)
 if dhi and 'hourly' in dhi:
     df_h = pd.DataFrame({
         'Pioggia (mmx10)': [x*10 for x in dhi['hourly']['precipitation']],
