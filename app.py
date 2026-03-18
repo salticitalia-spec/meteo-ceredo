@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # --- 1. CONFIGURAZIONE PAGINA ---
 st.set_page_config(page_title="Ceredoleso Sniper 15D+12H", page_icon="🎯", layout="centered")
 
-# --- 2. CSS CUSTOM ---
+# --- 2. CSS CUSTOM (ALTA LEGGIBILITÀ) ---
 st.markdown("""
 <style>
 .stApp { background-color:#000000 !important; }
@@ -16,6 +16,18 @@ st.markdown("""
 .sniper-crosshair { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 2.5px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 100; }
 .sniper-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: #FF0000; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 25px #FF0000; }
 iframe { width: 100%; height: 100%; border: none; }
+
+/* LEGENDA TATTICA CUSTOM */
+.legend-container {
+    display: flex;
+    justify-content: space-around;
+    background: #111;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #222;
+    margin-bottom: 5px;
+}
+.legend-item { text-align: center; font-family: monospace; font-weight: bold; font-size: 12px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -70,9 +82,18 @@ if fc_data and 'hourly' in fc_data:
                 </div>
                 ''', unsafe_allow_html=True)
 
-# --- 5. GRAFICO STORICO CON REGOLA "NO SOLE SE PIOVE" ---
+# --- 5. GRAFICO STORICO CON LEGENDA TATTICA ---
 st.write("")
-st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">DRYING ANALYSIS (LAST 15 DAYS)</div>', unsafe_allow_html=True)
+st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">HISTORICAL SCAN (LAST 15 DAYS)</div>', unsafe_allow_html=True)
+
+# Legenda Visiva
+st.markdown('''
+<div class="legend-container">
+    <div class="legend-item" style="color:#007FFF;">🟦 PIOGGIA (mm)</div>
+    <div class="legend-item" style="color:#FF3311;">🟥 VENTO (km/h)</div>
+    <div class="legend-item" style="color:#FFFF00;">🟨 SOLE (Asciugatura)</div>
+</div>
+''', unsafe_allow_html=True)
 
 if hi_data and 'daily' in hi_data:
     df_hist = pd.DataFrame({
@@ -82,29 +103,23 @@ if hi_data and 'daily' in hi_data:
         'Sole': hi_data['daily']['shortwave_radiation_sum']
     })
 
-    # APPLICAZIONE REGOLA: Se Pioggia > 0.2mm, il Sole viene azzerato per quel giorno
+    # Regola: Se piove > 0.2mm, il sole viene oscurato nel grafico
     df_hist.loc[df_hist['Pioggia'] > 0.2, 'Sole'] = 0
 
     fig = go.Figure()
-
-    # Sole (Asse Destro)
-    fig.add_trace(go.Scatter(x=df_hist['Data'], y=df_hist['Sole'], name="Sole", fill='tozeroy', line_color='#FFFF00', opacity=0.3, yaxis="y2"))
-    
-    # Vento (Asse Sinistro)
-    fig.add_trace(go.Scatter(x=df_hist['Data'], y=df_hist['Vento'], name="Vento", line=dict(color='#FF3311', width=2)))
-    
-    # Pioggia (Asse Sinistro)
-    fig.add_trace(go.Bar(x=df_hist['Data'], y=df_hist['Pioggia'], name="Pioggia", marker_color='#007FFF'))
+    fig.add_trace(go.Scatter(x=df_hist['Data'], y=df_hist['Sole'], fill='tozeroy', line_color='#FFFF00', opacity=0.3, yaxis="y2", showlegend=False))
+    fig.add_trace(go.Scatter(x=df_hist['Data'], y=df_hist['Vento'], line=dict(color='#FF3311', width=2.5), showlegend=False))
+    fig.add_trace(go.Bar(x=df_hist['Data'], y=df_hist['Pioggia'], marker_color='#007FFF', opacity=0.9, showlegend=False))
 
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         height=350,
-        margin=dict(l=0, r=0, t=10, b=0),
-        legend=dict(orientation="h", y=1.15, x=0.5, xanchor="center"),
-        yaxis=dict(title="mm / kmh", showgrid=False),
-        yaxis2=dict(title="Sole", overlaying="y", side="right", showgrid=False)
+        margin=dict(l=0, r=0, t=5, b=0),
+        yaxis=dict(title="Pioggia/Vento", showgrid=False, tickfont=dict(color="#666")),
+        yaxis2=dict(title="Radiazione", overlaying="y", side="right", showgrid=False, showticklabels=False),
+        xaxis=dict(showgrid=False, tickformat="%d/%m")
     )
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
