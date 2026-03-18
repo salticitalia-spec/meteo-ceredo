@@ -21,14 +21,13 @@ def get_weather_icon(code):
     return f'<span class="weather-icon">{icon}</span>'
 
 def get_santo(data_obj):
-    # I santi del Mostro Bovino
     santi = {"03-15": "S. Zaccaria", "03-16": "S. Eriberto", "03-17": "S. Patrizio", "03-18": "S. Cirillo", "03-19": "S. Giuseppe", "03-20": "S. Claudia", "03-21": "S. Benedetto", "03-22": "S. Lea", "03-23": "S. Turibio"}
     return santi.get(data_obj.strftime("%m-%d"), "S. del Giorno")
 
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS (Icone 80px e Radar) ---
+# --- 3. CSS ---
 style_css = "<style>"
 style_css += ".stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color:#000000 !important; }"
 style_css += ".main-card { border:1px solid #333; border-radius:20px; padding:20px; margin-bottom:15px; text-align:center; background:#000000 !important; }"
@@ -39,7 +38,7 @@ style_css += ".weather-icon { display:inline-block; font-size:80px; margin:10px 
 style_css += ".sun-ani { animation:rotate 12s linear infinite; }"
 style_css += ".rain-ani { animation:pulse 1s ease-in-out infinite; }"
 style_css += ".rain-time-display { font-weight:bold; font-size:24px; margin-bottom:15px; }"
-style_css += "iframe { border-radius: 15px; border: 1px solid #333; }"
+style_css += "iframe { border-radius: 15px; border: 1px solid #444; background: #111; }"
 style_css += "</style>"
 st.markdown(style_css, unsafe_allow_html=True)
 
@@ -90,15 +89,15 @@ st.markdown(f'''
     <div class="rain-time-display" style="color:{colore_oggi};">
         {msg_oggi if msg_oggi != "Asciutto" else ""}
     </div>
-    <div style="font-size:60px; font-weight:bold; color:white;">{curr['temperature']}°</div>
+    <div style="font-size:65px; font-weight:bold; color:white; margin-top:-10px;">{curr['temperature']}°</div>
 </div>
 ''', unsafe_allow_html=True)
 
-# --- 7. RADAR METEO LIVE ---
-st.markdown('<div style="color:#666; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">RADAR PRECIPITAZIONI LIVE</div>', unsafe_allow_html=True)
-# Radar RainViewer centrato su Ceredo
-radar_url = "https://www.rainviewer.com/map.html?loc=45.6117,10.971,9&type=radar&range=false&useRound=true&useStep=true&pType=all&fullScreen=false&isTab=true&logo=false&isPrecip=true&isCurrent=false&pastHours=1&nextHours=0"
-st.components.v1.iframe(radar_url, height=350)
+# --- 7. RADAR METEO LIVE CON PIN FALESIA ---
+st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">FALESIA DI CEREDO - RADAR LIVE</div>', unsafe_allow_html=True)
+# Radar RainViewer centrato e con Marker attivo sulla falesia
+radar_url = "https://www.rainviewer.com/map.html?loc=45.6117,10.971,10&type=radar&range=false&useRound=true&useStep=true&pType=all&fullScreen=false&isTab=true&logo=false&isPrecip=true&isCurrent=false&pastHours=1&nextHours=0"
+st.components.v1.iframe(radar_url, height=400)
 
 # --- 8. MOSTRO BOVINO ---
 st.write("")
