@@ -11,7 +11,6 @@ st.set_page_config(page_title="Meteo Ceredoleso Pro", page_icon="🧗", layout="
 def get_weather_icon(code):
     icons = {0: "☀️", 1: "☀️", 2: "⛅", 3: "☁️", 45: "🌫️", 51: "🌧️", 61: "🌧️", 95: "⚡"}
     icon = icons.get(code, "☁️")
-    # Animazioni: rotazione per il sole, pulsazione per la pioggia
     if icon == "☀️": return f'<span class="sun-ani">{icon}</span>'
     if icon == "🌧️": return f'<span class="rain-ani">{icon}</span>'
     return icon
@@ -31,8 +30,8 @@ def get_santo(data_obj):
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS "TOTAL BLACK" & ANIMAZIONI ---
-st.markdown('''
+# --- 3. CSS "TOTAL BLACK" & ANIMAZIONI (Versione Anti-Errore) ---
+st.markdown("""
 <style>
     .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
         background-color: #000000 !important;
@@ -54,10 +53,7 @@ st.markdown('''
         border-radius: 5px; color: #FFD700 !important; font-size: 10px;
         font-weight: bold; letter-spacing: 1px; margin-top: 15px; background: transparent !important;
     }
-    /* Definizione Animazioni CSS */
     @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     .sun-ani { display: inline-block; animation: rotate 12s linear infinite; }
-    .rain-ani { display: inline-block; animation: pulse 1.8s ease-in-out infinite; }
-    
-    [data-testid="stChart"] { background-color: #080808 !important; border:
+    .rain-ani { display: inline-block; animation: pulse
