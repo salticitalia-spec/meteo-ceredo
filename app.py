@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 # --- 1. CONFIGURAZIONE PAGINA ---
 st.set_page_config(page_title="Ceredoleso Sniper: Tiempo Azteca", page_icon="🎯", layout="centered")
 
-# --- 2. DATA FETCHING ---
+# --- 2. DATA FETCHING (METEO & STORICO) ---
 @st.cache_data(ttl=600)
 def fetch_data():
     lat, lon = 45.6117, 10.9710
@@ -23,7 +23,7 @@ def fetch_data():
     r_hi = requests.get(url_hist).json()
     return r_fc, r_hi
 
-# --- 3. CSS CUSTOM ---
+# --- 3. CSS CUSTOM (STILE SNIPER & PIETRA) ---
 st.markdown("""
 <style>
     .stApp { background-color:#000000 !important; }
@@ -102,7 +102,7 @@ if fc_data and 'hourly' in fc_data:
                 c = "#FF3311" if p > 30 else "#00FF00"
                 st.markdown(f'<div style="background:#111; border:1px solid #333; border-radius:8px; padding:8px; text-align:center;"><div style="font-size:9px; color:#555;">{t_str}</div><div style="font-size:13px; color:white; font-weight:bold;">{temp}°</div><div style="font-size:10px; color:{c};">{p}%</div></div>', unsafe_allow_html=True)
 
-# --- 7. STORICO 15GG ---
+# --- 7. STORICO 15GG (LEGENDA MOSTRATA CHIARAMENTE) ---
 st.write("")
 st.markdown('<div class="legend-container"><div class="legend-item" style="color:#007FFF;">🟦 PIOGGIA</div><div class="legend-item" style="color:#FF3311;">🟥 VENTO</div><div class="legend-item" style="color:#FFFF00;">🟨 SOLE</div></div>', unsafe_allow_html=True)
 
@@ -126,12 +126,12 @@ if hi_data and 'daily' in hi_data:
 now = datetime.now()
 h, m, s = now.hour, now.minute, now.second
 
-# Calcolo Circonferenze Precise: C = 2 * pi * r
-circ_h = 2 * math.pi * 46  # 289.0265
-circ_m = 2 * math.pi * 40  # 251.3274
-circ_s = 2 * math.pi * 34  # 213.6283
+# Calcolo Circonferenze basate sui raggi dei tuoi cerchi (2 * pi * r)
+circ_h = 2 * math.pi * 46  # 289.026...
+circ_m = 2 * math.pi * 40  # 251.327...
+circ_s = 2 * math.pi * 34  # 213.628...
 
-# Calcolo Offset (Il cerchio si svuota al passare del tempo)
+# Calcolo Offset Dinamici (si riempiono con il passare del tempo)
 off_h = circ_h - ((h % 24 + m/60) * circ_h / 24)
 off_m = circ_m - ((m + s/60) * circ_m / 60)
 off_s = circ_s - (s * circ_s / 60)
@@ -146,16 +146,3 @@ st.markdown(f"""
         
         <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2.5" 
             stroke-dasharray="{circ_m}" stroke-dashoffset="{off_m}" opacity="0.6"/>
-            
-        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2.5" 
-            stroke-dasharray="{circ_s}" stroke-dashoffset="{off_s}" opacity="0.8"/>
-    </svg>
-</div>
-<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace; font-weight:bold;">
-    TIEMPO ETERNO DE CEREDO
-</div>
-""", unsafe_allow_html=True)
-
-# Update automatico ogni secondo
-time.sleep(1)
-st.rerun()
