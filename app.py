@@ -47,23 +47,23 @@ st.markdown("""
         background-size: cover;
         background-position: center;
         border: 4px solid #222;
-        box-shadow: inset 0 0 80px #000, 0 0 30px #111;
+        box-shadow: inset 0 0 80px #000, 0 0 40px #111;
         display: flex;
         align-items: center;
         justify-content: center;
-        filter: sepia(0.5) brightness(0.7) contrast(1.3);
+        filter: sepia(0.5) brightness(0.7) contrast(1.2);
     }
     .digital-clock {
-        background: rgba(0,0,0,0.8);
-        padding: 10px 20px;
+        background: rgba(0,0,0,0.85);
+        padding: 10px 22px;
         border-radius: 12px;
         color: white;
         font-family: 'Courier New', monospace;
         font-size: 32px;
         font-weight: bold;
         z-index: 10;
-        border: 1px solid #444;
-        text-shadow: 0 0 10px #00FFFF;
+        border: 1px solid #333;
+        text-shadow: 0 0 15px #00FFFF;
     }
     .rings-svg {
         position: absolute;
@@ -74,7 +74,7 @@ st.markdown("""
     .ring-circle {
         fill: none;
         stroke-linecap: round;
-        transition: stroke-dashoffset 0.5s ease;
+        transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -126,12 +126,12 @@ if hi_data and 'daily' in hi_data:
 now = datetime.now()
 h, m, s = now.hour, now.minute, now.second
 
-# Calcolo Circonferenze Basate sul tuo SVG (2 * pi * r)
-circ_h = 2 * math.pi * 46  # 289.026
-circ_m = 2 * math.pi * 40  # 251.327
-circ_s = 2 * math.pi * 34  # 213.628
+# Calcolo Circonferenze Precise: C = 2 * pi * r
+circ_h = 2 * math.pi * 46  # 289.0265
+circ_m = 2 * math.pi * 40  # 251.3274
+circ_s = 2 * math.pi * 34  # 213.6283
 
-# Calcolo Offset Dinamici
+# Calcolo Offset (Il cerchio si svuota al passare del tempo)
 off_h = circ_h - ((h % 24 + m/60) * circ_h / 24)
 off_m = circ_m - ((m + s/60) * circ_m / 60)
 off_s = circ_s - (s * circ_s / 60)
@@ -151,11 +151,11 @@ st.markdown(f"""
             stroke-dasharray="{circ_s}" stroke-dashoffset="{off_s}" opacity="0.8"/>
     </svg>
 </div>
-<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace;">
+<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace; font-weight:bold;">
     TIEMPO ETERNO DE CEREDO
 </div>
 """, unsafe_allow_html=True)
 
-# Riavvio per aggiornare i secondi
+# Update automatico ogni secondo
 time.sleep(1)
 st.rerun()
