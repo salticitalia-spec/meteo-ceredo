@@ -9,10 +9,16 @@ st.set_page_config(page_title="Meteo Ceredoleso Pro", page_icon="🧗", layout="
 
 # --- 2. FUNZIONI E SANTI ---
 def get_weather_icon(code):
+    # Codici pioggia: 51, 53, 55, 61, 63, 65, 80, 81, 82
+    pioggia_codes = [51, 53, 55, 61, 63, 65, 80, 81, 82]
     icons = {0: "☀️", 1: "☀️", 2: "⛅", 3: "☁️", 45: "🌫️", 51: "🌧️", 61: "🌧️", 95: "⚡"}
     icon = icons.get(code, "☁️")
-    if icon == "☀️": return f'<span class="sun-ani">{icon}</span>'
-    if icon == "🌧️": return f'<span class="rain-ani">{icon}</span>'
+    
+    if code in pioggia_codes:
+        # Nuvola Rossa Pulsante per la pioggia
+        return f'<span class="rain-ani" style="color: #FF0000; filter: drop-shadow(0 0 5px #FF0000);">☁️</span>'
+    if icon == "☀️":
+        return f'<span class="sun-ani">{icon}</span>'
     return icon
 
 def calcola_percepita(T, rh):
@@ -26,16 +32,16 @@ def get_santo(data_obj):
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS "STAFFA DI SICUREZZA" (Senza tripli apici per evitare SyntaxError) ---
+# --- 3. CSS "STAFFA DI SICUREZZA" ---
 style_css = "<style>"
 style_css += ".stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color: #000000 !important; }"
 style_css += ".main-card { border: 1px solid #333; border-radius: 20px; padding: 25px; margin-bottom: 20px; text-align: center; background: #000000 !important; }"
 style_css += ".header-text { color: #00FFFF !important; font-weight: 100 !important; letter-spacing: 7px; text-transform: uppercase; font-size: 26px; text-align: center; margin: 20px 0; }"
 style_css += ".status-alert { display: inline-block; padding: 8px 15px; border: 1px solid #FFD700; border-radius: 5px; color: #FFD700 !important; font-size: 10px; font-weight: bold; letter-spacing: 1px; margin-top: 15px; background: transparent !important; }"
 style_css += "@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }"
-style_css += "@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }"
+style_css += "@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }"
 style_css += ".sun-ani { display: inline-block; animation: rotate 12s linear infinite; }"
-style_css += ".rain-ani { display: inline-block; animation: pulse 1.8s ease-in-out infinite; }"
+style_css += ".rain-ani { display: inline-block; animation: pulse 1s ease-in-out infinite; font-size: 70px; }"
 style_css += "[data-testid='stChart'] { background-color: #080808 !important; border: 1px solid #222; border-radius: 10px; }"
 style_css += "</style>"
 st.markdown(style_css, unsafe_allow_html=True)
@@ -72,7 +78,7 @@ st.markdown(f'''
         {giorni_ita[now.weekday()]} {now.day} {mesi_ita[now.month-1]}
     </div>
     <div style="color:#00FFFF; font-size:11px; margin:8px 0;">✨ {get_santo(now)}</div>
-    <div style="font-size:65px; margin:15px 0;">{get_weather_icon(curr['weathercode'])}</div>
+    <div style="margin:15px 0;">{get_weather_icon(curr['weathercode'])}</div>
     <div style="font-size:55px; font-weight:bold; color:white;">{c_temp}°</div>
     <div style="color:#FFFF00; font-size:14px;">Percepita: {perc}°</div>
     <div style="display:flex; justify-content:center; gap:25px; margin-top:20px; color:#00FF00; font-weight:bold; font-size:14px;">
