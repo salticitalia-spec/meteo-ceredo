@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # --- 1. CONFIGURAZIONE PAGINA ---
 st.set_page_config(page_title="Ceredoleso Sniper 15D+12H", page_icon="🎯", layout="centered")
 
-# --- 2. CSS CUSTOM (TEMA BLACK) ---
+# --- 2. CSS CUSTOM ---
 st.markdown("""
 <style>
 .stApp { background-color:#000000 !important; }
@@ -23,9 +23,7 @@ iframe { width: 100%; height: 100%; border: none; }
 @st.cache_data(ttl=600)
 def fetch_data():
     lat, lon = 45.6117, 10.9710
-    # Forecast 12h (ICON-CH)
     url_fc = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=1"
-    # Storico 15g
     today = datetime.now()
     end_date = (today - timedelta(days=1)).strftime('%Y-%m-%d')
     start_date = (today - timedelta(days=15)).strftime('%Y-%m-%d')
@@ -40,7 +38,7 @@ fc_data, hi_data = fetch_data()
 # --- 4. INTERFACCIA ---
 st.markdown('<div class="header-text">Ceredoleso Sniper System</div>', unsafe_allow_html=True)
 
-# Radar Predittivo
+# Radar
 st.markdown('<div style="color:#FF0000; font-size:11px; text-align:center; letter-spacing:2px; margin-bottom:10px; font-weight:bold;">TARGET: ICON-EU (SWISS MODEL) PROJECTION +12H</div>', unsafe_allow_html=True)
 radar_url = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&level=surface&overlay=rain&product=iconEu&menu=&message=true&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
 
@@ -51,7 +49,7 @@ st.markdown(f'''
 </div>
 ''', unsafe_allow_html=True)
 
-# Timeline 12h (Griglia)
+# Timeline 12h
 if fc_data and 'hourly' in fc_data:
     st.write("")
     now_h = datetime.now().hour
@@ -72,9 +70,9 @@ if fc_data and 'hourly' in fc_data:
                 </div>
                 ''', unsafe_allow_html=True)
 
-# --- 5. GRAFICO STORICO 15 GIORNI ---
+# --- 5. GRAFICO STORICO CON REGOLA "NO SOLE SE PIOVE" ---
 st.write("")
-st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">HISTORICAL SCAN: DRYING FACTORS (LAST 15 DAYS)</div>', unsafe_allow_html=True)
+st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">DRYING ANALYSIS (LAST 15 DAYS)</div>', unsafe_allow_html=True)
 
 if hi_data and 'daily' in hi_data:
     df_hist = pd.DataFrame({
@@ -84,10 +82,13 @@ if hi_data and 'daily' in hi_data:
         'Sole': hi_data['daily']['shortwave_radiation_sum']
     })
 
+    # APPLICAZIONE REGOLA: Se Pioggia > 0.2mm, il Sole viene azzerato per quel giorno
+    df_hist.loc[df_hist['Pioggia'] > 0.2, 'Sole'] = 0
+
     fig = go.Figure()
 
     # Sole (Asse Destro)
-    fig.add_trace(go.Scatter(x=df_hist['Data'], y=df_hist['Sole'], name="Sole", fill='tozeroy', line_color='#FFFF00', opacity=0.2, yaxis="y2"))
+    fig.add_trace(go.Scatter(x=df_hist['Data'], y=df_hist['Sole'], name="Sole", fill='tozeroy', line_color='#FFFF00', opacity=0.3, yaxis="y2"))
     
     # Vento (Asse Sinistro)
     fig.add_trace(go.Scatter(x=df_hist['Data'], y=df_hist['Vento'], name="Vento", line=dict(color='#FF3311', width=2)))
@@ -107,7 +108,6 @@ if hi_data and 'daily' in hi_data:
     )
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# Refresh button
 if st.button("🔄 RE-SYNC TARGET"):
     st.cache_data.clear()
     st.rerun()
