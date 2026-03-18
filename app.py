@@ -1,11 +1,9 @@
 import streamlit as st
 import requests
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
 
 # --- 1. CONFIGURAZIONE PAGINA ---
-st.set_page_config(page_title="Meteo Ceredoleso Pro", page_icon="🧗", layout="centered")
+st.set_page_config(page_title="Meteo Ceredoleso Pro", page_icon="🎯", layout="centered")
 
 # --- 2. FUNZIONI E SANTI ---
 def get_weather_icon(code):
@@ -27,19 +25,49 @@ def get_santo(data_obj):
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS ---
-style_css = "<style>"
-style_css += ".stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color:#000000 !important; }"
-style_css += ".main-card { border:1px solid #333; border-radius:20px; padding:20px; margin-bottom:15px; text-align:center; background:#000000 !important; }"
-style_css += ".header-text { color:#00FFFF !important; font-weight:100 !important; letter-spacing:7px; text-transform:uppercase; font-size:26px; text-align:center; margin:20px 0; }"
-style_css += "@keyframes rotate { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }"
-style_css += "@keyframes pulse { 0% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(1.05); } 100% { opacity:1; transform:scale(1); } }"
-style_css += ".weather-icon { display:inline-block; font-size:80px; margin:10px 0; }"
-style_css += ".sun-ani { animation:rotate 12s linear infinite; }"
-style_css += ".rain-ani { animation:pulse 1s ease-in-out infinite; }"
-style_css += ".rain-time-display { font-weight:bold; font-size:24px; margin-bottom:15px; }"
-style_css += "iframe { border-radius: 15px; border: 1px solid #444; }"
-style_css += "</style>"
+# --- 3. CSS (MIRINO SNIPER INCLUSO) ---
+style_css = """
+<style>
+.stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color:#000000 !important; }
+.main-card { border:1px solid #333; border-radius:20px; padding:20px; margin-bottom:15px; text-align:center; background:#000000 !important; }
+.header-text { color:#00FFFF !important; font-weight:100 !important; letter-spacing:7px; text-transform:uppercase; font-size:26px; text-align:center; margin:20px 0; }
+@keyframes rotate { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+@keyframes pulse { 0% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(1.05); } 100% { opacity:1; transform:scale(1); } }
+.weather-icon { display:inline-block; font-size:80px; margin:10px 0; }
+.sun-ani { animation:rotate 12s linear infinite; }
+.rain-ani { animation:pulse 1s ease-in-out infinite; }
+.rain-time-display { font-weight:bold; font-size:24px; margin-bottom:15px; }
+
+/* CSS MIRINO PRECISIONE */
+.radar-container { position: relative; width: 100%; height: 450px; }
+.sniper-crosshair {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 40px; height: 40px;
+    border: 2px solid #FF0000;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none; /* permette di cliccare la mappa sotto */
+    z-index: 10;
+}
+.sniper-crosshair::before, .sniper-crosshair::after {
+    content: '';
+    position: absolute;
+    background: #FF0000;
+}
+.sniper-crosshair::before { top: 50%; left: -10px; width: 60px; height: 1px; transform: translateY(-50%); }
+.sniper-crosshair::after { left: 50%; top: -10px; width: 1px; height: 60px; transform: translateX(-50%); }
+.sniper-dot {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 4px; height: 4px;
+    background: #FF0000;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+iframe { border-radius: 15px; border: 1px solid #444; width: 100%; height: 450px; }
+</style>
+"""
 st.markdown(style_css, unsafe_allow_html=True)
 
 # --- 4. DATA FETCHING ---
@@ -93,15 +121,18 @@ st.markdown(f'''
 </div>
 ''', unsafe_allow_html=True)
 
-# --- 7. RADAR METEO WINDY CON MARCATORE ---
-st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">CEREDO RADAR LIVE (WINDY)</div>', unsafe_allow_html=True)
+# --- 7. RADAR METEO CON MIRINO CSS ---
+st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">TARGET: CEREDO FALESIA</div>', unsafe_allow_html=True)
 
-# Widget Windy centrato con puntatore su Ceredo
-windy_url = "https://www.windy.com/multimodel/45.6117/10.9710?radar,45.450,10.971,9"
-# Nota: Windy usa un iframe specifico per il radar se vogliamo l'animazione
-radar_windy = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&level=surface&overlay=radar&product=radar&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
+radar_windy = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&level=surface&overlay=radar&product=radar&menu=&message=false&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
 
-st.components.v1.iframe(radar_windy, height=450)
+# Container che sovrappone il mirino all'iframe
+st.markdown(f'''
+<div class="radar-container">
+    <div class="sniper-crosshair"><div class="sniper-dot"></div></div>
+    <iframe src="{radar_windy}"></iframe>
+</div>
+''', unsafe_allow_html=True)
 
 # --- 8. MOSTRO BOVINO ---
 st.write("")
