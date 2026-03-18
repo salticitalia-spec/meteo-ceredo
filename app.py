@@ -15,10 +15,17 @@ def get_weather_icon(code):
     icon = icons.get(code, "☁️")
     
     if code in pioggia_codes:
-        # Nuvola Rossa Pulsante per la pioggia
-        return f'<span class="rain-ani" style="color: #FF0000; filter: drop-shadow(0 0 5px #FF0000);">☁️</span>'
+        # Nuvola Rossa Pulsante per la pioggia (Allarme)
+        return f'<span class="rain-ani" style="color: #FF0000; filter: drop-shadow(0 0 5px #FF0000);">🌧️</span>'
+    
+    if icon == "🌧️" or icon == "☁️" or icon == "⛅":
+        # Nuvola Bianca per condizioni non piovose (Neutro)
+        return f'<span style="color: #FFFFFF;">{icon}</span>'
+    
     if icon == "☀️":
+        # Sole Giallo/Bianco Ruotante
         return f'<span class="sun-ani">{icon}</span>'
+    
     return icon
 
 def calcola_percepita(T, rh):
@@ -40,7 +47,7 @@ style_css += ".header-text { color: #00FFFF !important; font-weight: 100 !import
 style_css += ".status-alert { display: inline-block; padding: 8px 15px; border: 1px solid #FFD700; border-radius: 5px; color: #FFD700 !important; font-size: 10px; font-weight: bold; letter-spacing: 1px; margin-top: 15px; background: transparent !important; }"
 style_css += "@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }"
 style_css += "@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }"
-style_css += ".sun-ani { display: inline-block; animation: rotate 12s linear infinite; }"
+style_css += ".sun-ani { display: inline-block; animation: rotate 12s linear infinite; font-size: 65px; }"
 style_css += ".rain-ani { display: inline-block; animation: pulse 1s ease-in-out infinite; font-size: 70px; }"
 style_css += "[data-testid='stChart'] { background-color: #080808 !important; border: 1px solid #222; border-radius: 10px; }"
 style_css += "</style>"
