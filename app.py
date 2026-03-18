@@ -25,7 +25,7 @@ def get_santo(data_obj):
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS (MIRINO SNIPER INCLUSO) ---
+# --- 3. CSS (STILE PRO + MIRINO) ---
 style_css = """
 <style>
 .stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color:#000000 !important; }
@@ -39,7 +39,7 @@ style_css = """
 .rain-time-display { font-weight:bold; font-size:24px; margin-bottom:15px; }
 
 /* CSS MIRINO PRECISIONE */
-.radar-container { position: relative; width: 100%; height: 450px; }
+.radar-container { position: relative; width: 100%; height: 450px; overflow: hidden; border-radius: 15px; border: 1px solid #444; }
 .sniper-crosshair {
     position: absolute;
     top: 50%; left: 50%;
@@ -47,25 +47,14 @@ style_css = """
     border: 2px solid #FF0000;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    pointer-events: none; /* permette di cliccare la mappa sotto */
+    pointer-events: none;
     z-index: 10;
 }
-.sniper-crosshair::before, .sniper-crosshair::after {
-    content: '';
-    position: absolute;
-    background: #FF0000;
-}
-.sniper-crosshair::before { top: 50%; left: -10px; width: 60px; height: 1px; transform: translateY(-50%); }
-.sniper-crosshair::after { left: 50%; top: -10px; width: 1px; height: 60px; transform: translateX(-50%); }
-.sniper-dot {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 4px; height: 4px;
-    background: #FF0000;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-}
-iframe { border-radius: 15px; border: 1px solid #444; width: 100%; height: 450px; }
+.sniper-crosshair::before { content: ''; position: absolute; top: 50%; left: -10px; width: 60px; height: 1px; background: #FF0000; transform: translateY(-50%); }
+.sniper-crosshair::after { content: ''; position: absolute; left: 50%; top: -10px; width: 1px; height: 60px; background: #FF0000; transform: translateX(-50%); }
+.sniper-dot { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: #FF0000; border-radius: 50%; transform: translate(-50%, -50%); }
+
+iframe { width: 100%; height: 450px; border: none; }
 </style>
 """
 st.markdown(style_css, unsafe_allow_html=True)
@@ -121,12 +110,11 @@ st.markdown(f'''
 </div>
 ''', unsafe_allow_html=True)
 
-# --- 7. RADAR METEO CON MIRINO CSS ---
+# --- 7. RADAR METEO CON MIRINO ---
 st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">TARGET: CEREDO FALESIA</div>', unsafe_allow_html=True)
 
 radar_windy = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&level=surface&overlay=radar&product=radar&menu=&message=false&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
 
-# Container che sovrappone il mirino all'iframe
 st.markdown(f'''
 <div class="radar-container">
     <div class="sniper-crosshair"><div class="sniper-dot"></div></div>
