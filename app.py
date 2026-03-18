@@ -6,113 +6,101 @@ import time
 import math
 from datetime import datetime, timedelta
 
-# --- 1. CONFIGURAZIONE PAGINA ---
-st.set_page_config(page_title="Ceredoleso Sniper: Tiempo Azteca", page_icon="🎯", layout="centered")
+# --- 1. CONFIGURAZIONE ---
+st.set_page_config(page_title="Ceredoleso Sniper", page_icon="🎯", layout="centered")
 
-# --- 2. DATA FETCHING ---
 @st.cache_data(ttl=600)
 def fetch_data():
     lat, lon = 45.6117, 10.9710
-    url_fc = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=1"
-    today = datetime.now()
-    end_date = (today - timedelta(days=1)).strftime('%Y-%m-%d')
-    start_date = (today - timedelta(days=15)).strftime('%Y-%m-%d')
-    url_hist = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&start_date={start_date}&end_date={end_date}&daily=precipitation_sum,wind_speed_10m_max,shortwave_radiation_sum&timezone=Europe%2FRome"
-    try:
-        r_fc = requests.get(url_fc).json()
-        r_hi = requests.get(url_hist).json()
-        return r_fc, r_hi
-    except:
-        return None, None
+    base_fc = "https://api.open-meteo.com/v1/forecast"
+    base_hi = "https://archive-api.open-meteo.com/v1/archive"
+    
+    # Forecast 24h
+    r_fc = requests.get(f"{base_fc}?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=1").json()
+    
+    # Storico 15gg
+    end = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    start = (datetime.now() - timedelta(days=15)).strftime('%Y-%m-%d')
+    r_hi = requests.get(f"{base_hi}?latitude={lat}&longitude={lon}&start_date={start}&end_date={end}&daily=precipitation_sum,wind_speed_10m_max,shortwave_radiation_sum&timezone=Europe%2FRome").json()
+    
+    return r_fc, r_hi
 
-# --- 3. CSS CUSTOM ---
+# --- 2. STILE CSS ---
 st.markdown("""
 <style>
-    .stApp { background-color:#000000 !important; }
-    .header-text { color:#00FFFF; font-weight:100; letter-spacing:5px; text-transform:uppercase; font-size:24px; text-align:center; margin:20px 0; }
-    .radar-container { position: relative; width: 100%; height: 400px; border-radius: 15px; border: 2px solid #333; overflow: hidden; margin-bottom: 20px; }
-    .sniper-crosshair { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 2.5px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 100; }
-    .sniper-dot { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: #FF0000; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 25px #FF0000; }
-    iframe { width: 100%; height: 100%; border: none; }
-    .legend-container { display: flex; justify-content: space-around; background: #111; padding: 10px; border-radius: 10px; border: 1px solid #222; margin-bottom: 5px; }
-    .legend-item { text-align: center; font-family: monospace; font-weight: bold; font-size: 11px; }
+    .stApp { background-color:#000; }
+    .header-text { color:#00FFFF; font-size:24px; text-align:center; letter-spacing:5px; margin:20px 0; font-family:monospace; }
+    .radar-container { position: relative; width: 100%; height: 400px; border-radius: 15px; border: 2px solid #333; overflow: hidden; }
+    .sniper-crosshair { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; border: 2.5px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%); z-index: 100; pointer-events: none; }
+    .sniper-dot { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: #FF0000; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 15px #FF0000; }
+    
     .aztec-wrapper {
         position: relative; width: 320px; height: 320px; margin: 30px auto; border-radius: 50%;
-        background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png');
-        background-size: cover; background-position: center; border: 4px solid #222;
-        box-shadow: inset 0 0 80px #000, 0 0 40px #111; display: flex; align-items: center; justify-content: center;
+        background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png') center/cover;
+        border: 4px solid #222; box-shadow: inset 0 0 80px #000; display: flex; align-items: center; justify-content: center;
         filter: sepia(0.5) brightness(0.7) contrast(1.2);
     }
     .digital-clock {
-        background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 12px; color: white;
-        font-family: 'Courier New', monospace; font-size: 30px; font-weight: bold; z-index: 10;
-        border: 1px solid #333; text-shadow: 0 0 15px #00FFFF;
+        background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 12px; color: #fff;
+        font-family: monospace; font-size: 30px; font-weight: bold; border: 1px solid #333; text-shadow: 0 0 10px #00FFFF;
     }
-    .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); pointer-events: none; }
+    .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring-circle { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. DATA FETCHING ---
-fc_data, hi_data = fetch_data()
+# --- 3. LOGICA DATI ---
+fc, hi = fetch_data()
 
-# --- 5. RADAR ---
 st.markdown('<div class="header-text">Ceredoleso Sniper</div>', unsafe_allow_html=True)
-radar_url = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&level=surface&overlay=rain&product=iconEu&menu=&message=true&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
-st.markdown(f'<div class="radar-container"><div class="sniper-crosshair"><div class="sniper-dot"></div></div><iframe src="{radar_url}"></iframe></div>', unsafe_allow_html=True)
 
-# --- 6. TIMELINE 12H ---
-if fc_data and 'hourly' in fc_data:
+# Radar
+radar = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true"
+st.markdown(f'<div class="radar-container"><div class="sniper-crosshair"><div class="sniper-dot"></div></div><iframe src="{radar}" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
+
+# Timeline 12h
+if fc and 'hourly' in fc:
     cols = st.columns(6)
-    now_h = datetime.now().hour
+    h_now = datetime.now().hour
     for i in range(12):
-        idx = now_h + i
-        if idx < len(fc_data['hourly']['time']):
+        idx = h_now + i
+        if idx < len(fc['hourly']['time']):
             with cols[i % 6]:
-                t = fc_data['hourly']['time'][idx][-5:]
-                p = fc_data['hourly']['precipitation_probability'][idx]
-                temp = fc_data['hourly']['temperature_2m'][idx]
-                color = "#FF3311" if p > 30 else "#00FF00"
-                st.markdown(f'<div style="background:#111; border:1px solid #333; border-radius:8px; padding:5px; text-align:center; font-size:10px; color:white;">{t}<br><b>{temp}°</b><br><span style="color:{color}">{p}%</span></div>', unsafe_allow_html=True)
+                p = fc['hourly']['precipitation_probability'][idx]
+                st.markdown(f"""<div style="text-align:center; font-size:10px; color:#aaa;">{fc['hourly']['time'][idx][-5:]}<br>
+                <b style="color:white">{fc['hourly']['temperature_2m'][idx]}°</b><br>
+                <span style="color:{'#F31' if p > 30 else '#0F0'}">{p}%</span></div>""", unsafe_allow_html=True)
 
-# --- 7. STORICO 15GG ---
-st.markdown('<div class="legend-container"><div class="legend-item" style="color:#007FFF;">🟦 PIOGGIA</div><div class="legend-item" style="color:#FF3311;">🟥 VENTO</div><div class="legend-item" style="color:#FFFF00;">🟨 SOLE</div></div>', unsafe_allow_html=True)
-if hi_data and 'daily' in hi_data:
-    df = pd.DataFrame({'D': hi_data['daily']['time'], 'P': hi_data['daily']['precipitation_sum'], 'V': hi_data['daily']['wind_speed_10m_max'], 'S': hi_data['daily']['shortwave_radiation_sum']})
-    df.loc[df['P'] > 0.2, 'S'] = 0 
+# Storico
+if hi and 'daily' in hi:
+    df = pd.DataFrame({'D': hi['daily']['time'], 'P': hi['daily']['precipitation_sum'], 'V': hi['daily']['wind_speed_10m_max'], 'S': hi['daily']['shortwave_radiation_sum']})
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df['D'], y=df['S'], fill='tozeroy', line_color='#FFFF00', opacity=0.15, yaxis="y2"))
-    fig.add_trace(go.Scatter(x=df['D'], y=df['V'], line=dict(color='#FF3311', width=2)))
-    fig.add_trace(go.Bar(x=df['D'], y=df['P'], marker_color='#007FFF'))
-    fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=220, margin=dict(l=0, r=0, t=5, b=0), showlegend=False, yaxis=dict(showgrid=False), yaxis2=dict(overlaying="y", side="right", showgrid=False), xaxis=dict(showgrid=False))
+    fig.add_trace(go.Bar(x=df['D'], y=df['P'], marker_color='#007FFF', name="Pioggia"))
+    fig.add_trace(go.Scatter(x=df['D'], y=df['V'], line=dict(color='#FF3311'), name="Vento"))
+    fig.update_layout(template="plotly_dark", height=200, margin=dict(l=0,r=0,t=0,b=0), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# --- 8. OROLOGIO AZTECO (COSTRUZIONE SICURA) ---
-now = datetime.now()
-h, m, s = now.hour, now.minute, now.second
+# --- 4. OROLOGIO AZTECO ---
+n = datetime.now()
+sec = n.second
+# Circonferenze: R46=289.02, R40=251.32, R34=213.62
+off_h = 289.02 - (((n.hour % 24) + n.minute/60) * 289.02 / 24)
+off_m = 251.32 - ((n.minute + sec/60) * 251.32 / 60)
+off_s = 213.62 - (sec * 213.62 / 60)
 
-# Valori esatti circonferenza
-c_h = 289.02652413026095
-c_m = 251.32741228718345
-c_s = 213.62830044410595
+# Costruzione HTML pulita
+clock = f"""
+<div class="aztec-wrapper">
+    <div class="digital-clock">{n.strftime("%H:%M")}<span style="color:#F31; font-size:18px;">:{sec:02d}</span></div>
+    <svg class="rings-svg" viewBox="0 0 100 100">
+        <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2.5" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.4"/>
+        <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2.5" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.6"/>
+        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2.5" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.8"/>
+    </svg>
+</div>
+<div style="text-align:center; color:#444; font-size:10px; font-family:monospace; letter-spacing:5px;">TIEMPO DE CEREDO</div>
+"""
+st.markdown(clock, unsafe_allow_html=True)
 
-# Calcolo offset
-o_h = c_h - ((h % 24 + m/60) * c_h / 24)
-o_m = c_m - ((m + s/60) * c_m / 60)
-o_s = c_s - (s * c_s / 60)
-
-# Concatenazione stringhe per evitare SyntaxError
-clock_html = '<div class="aztec-wrapper">'
-clock_html += f'<div class="digital-clock">{now.strftime("%H:%M")}<span style="font-size:18px; color:#FF3311;">:{s:02d}</span></div>'
-clock_html += '<svg class="rings-svg" viewBox="0 0 100 100">'
-clock_html += f'<circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2.5" stroke-dasharray="{c_h}" stroke-dashoffset="{o_h}" opacity="0.5"/>'
-clock_html += f'<circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2.5" stroke-dasharray="{c_m}" stroke-dashoffset="{o_m}" opacity="0.6"/>'
-clock_html += f'<circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2.5" stroke-dasharray="{c_s}" stroke-dashoffset="{o_s}" opacity="0.8"/>'
-clock_html += '</svg></div>'
-clock_html += '<div style="text-align:center; color:#555; letter-spacing:8px; font-size:10px; margin-top:-20px; font-family:monospace; font-weight:bold;">TIEMPO ETERNO DE CEREDO</div>'
-
-st.markdown(clock_html, unsafe_allow_html=True)
-
-# Loop refresh
 time.sleep(1)
 st.rerun()
