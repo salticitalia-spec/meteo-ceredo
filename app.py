@@ -38,7 +38,7 @@ style_css += ".weather-icon { display:inline-block; font-size:80px; margin:10px 
 style_css += ".sun-ani { animation:rotate 12s linear infinite; }"
 style_css += ".rain-ani { animation:pulse 1s ease-in-out infinite; }"
 style_css += ".rain-time-display { font-weight:bold; font-size:24px; margin-bottom:15px; }"
-style_css += "iframe { border-radius: 15px; border: 1px solid #444; background: #111; }"
+style_css += "iframe { border-radius: 15px; border: 1px solid #444; }"
 style_css += "</style>"
 st.markdown(style_css, unsafe_allow_html=True)
 
@@ -93,11 +93,15 @@ st.markdown(f'''
 </div>
 ''', unsafe_allow_html=True)
 
-# --- 7. RADAR METEO LIVE CON PIN FALESIA ---
-st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">FALESIA DI CEREDO - RADAR LIVE</div>', unsafe_allow_html=True)
-# Radar RainViewer centrato e con Marker attivo sulla falesia
-radar_url = "https://www.rainviewer.com/map.html?loc=45.6117,10.971,10&type=radar&range=false&useRound=true&useStep=true&pType=all&fullScreen=false&isTab=true&logo=false&isPrecip=true&isCurrent=false&pastHours=1&nextHours=0"
-st.components.v1.iframe(radar_url, height=400)
+# --- 7. RADAR METEO WINDY CON MARCATORE ---
+st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">CEREDO RADAR LIVE (WINDY)</div>', unsafe_allow_html=True)
+
+# Widget Windy centrato con puntatore su Ceredo
+windy_url = "https://www.windy.com/multimodel/45.6117/10.9710?radar,45.450,10.971,9"
+# Nota: Windy usa un iframe specifico per il radar se vogliamo l'animazione
+radar_windy = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&level=surface&overlay=radar&product=radar&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
+
+st.components.v1.iframe(radar_windy, height=450)
 
 # --- 8. MOSTRO BOVINO ---
 st.write("")
