@@ -11,21 +11,36 @@ st.set_page_config(page_title="Ceredoleso Sniper", page_icon="🎯", layout="cen
 @st.cache_data(ttl=600)
 def fetch_all_data():
     lat, lon = 45.6117, 10.9710
-    # Meteo 24h
     url_fc = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=1"
-    # Storico 15gg
     end = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     start = (datetime.now() - timedelta(days=15)).strftime('%Y-%m-%d')
     url_hi = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&start_date={start}&end_date={end}&daily=precipitation_sum,wind_speed_10m_max,shortwave_radiation_sum&timezone=Europe%2FRome"
-    
     return requests.get(url_fc).json(), requests.get(url_hi).json()
 
-# --- 2. STILE CSS UNIFICATO ---
+def get_aztec_day():
+    # I 20 simboli dei giorni aztechi (Tonalpohualli)
+    symbols = ["Cipactli (Coccodrillo)", "Ehecatl (Vento)", "Calli (Casa)", "Cuetzpalin (Lucertola)", 
+               "Coatl (Serpente)", "Miquiztli (Morte)", "Mazatl (Cervo)", "Tochtli (Coniglio)", 
+               "Atl (Acqua)", "Itzcuintli (Cane)", "Ozomatli (Scimmia)", "Malinalli (Erba)", 
+               "Acatl (Canna)", "Ocelotl (Giaguaro)", "Quauhtli (Aquila)", "Cozcaquauhtli (Avvoltoio)", 
+               "Olin (Movimento)", "Tecpatl (Coltello)", "Quiahuitl (Pioggia)", "Xochitl (Fiore)"]
+    
+    # Data di riferimento (01-01-2024 era un giorno 'Canna')
+    ref_date = datetime(2024, 1, 1)
+    delta_days = (datetime.now() - ref_date).days
+    
+    # Calcolo dell'indice (ciclo di 20 giorni)
+    symbol_idx = (delta_days + 12) % 20  # +12 è il correttivo basato sulla correlazione glifica
+    # Calcolo del numero sacro (ciclo di 13 numeri)
+    number_idx = (delta_days + 0) % 13 + 1
+    
+    return f"{number_idx} - {symbols[symbol_idx]}"
+
+# --- 2. STILE CSS ---
 st.markdown("""
 <style>
     .stApp { background-color:#000; }
     .header-text { color:#00FFFF; font-size:22px; text-align:center; letter-spacing:5px; margin:10px 0; font-family:monospace; }
-    
     .radar-box { position: relative; width: 100%; height: 380px; border-radius: 15px; border: 2px solid #333; overflow: hidden; margin-bottom: 20px; }
     .crosshair { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; border: 2px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
     .dot { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: #FF0000; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 10px #FF0000; }
@@ -42,16 +57,13 @@ st.markdown("""
     .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring-circle { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
     
-    .footer-label { 
-        text-align: center; color: #555; font-size: 11px; font-family: monospace; 
-        letter-spacing: 6px; font-weight: bold; margin-top: -5px; margin-bottom: 30px;
-    }
+    .footer-label { text-align: center; color: #555; font-size: 11px; font-family: monospace; letter-spacing: 6px; font-weight: bold; margin-top: -5px; }
+    .aztec-day-label { text-align: center; color: #840; font-size: 13px; font-family: 'Courier New', monospace; font-weight: bold; margin-bottom: 30px; margin-top: 5px; text-transform: uppercase; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LOGICA E VISUALIZZAZIONE ---
+# --- 3. DATI E UI ---
 fc, hi = fetch_all_data()
-
 st.markdown('<div class="header-text">Ceredoleso Sniper</div>', unsafe_allow_html=True)
 
 # Radar
@@ -80,7 +92,7 @@ if hi and 'daily' in hi:
     fig.update_layout(template="plotly_dark", height=180, margin=dict(l=0,r=0,t=10,b=0), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# Orologio Azteco e Scritta
+# Orologio e Segno del Giorno
 n = datetime.now()
 s = n.second
 c_h, c_m, c_s = 289.02, 251.32, 213.62
@@ -98,8 +110,8 @@ st.markdown(f"""
     </svg>
 </div>
 <div class="footer-label">TIEMPO ETERNO DE CEREDO</div>
+<div class="aztec-day-label">{get_aztec_day()}</div>
 """, unsafe_allow_html=True)
 
-# Loop refresh per i secondi
 time.sleep(1)
 st.rerun()
