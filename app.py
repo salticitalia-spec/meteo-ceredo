@@ -25,7 +25,7 @@ def get_santo(data_obj):
 giorni_ita = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 mesi_ita = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
 
-# --- 3. CSS (STILE PRO + MIRINO) ---
+# --- 3. CSS (MIRINO SNIPER + TEMA BLACK) ---
 style_css = """
 <style>
 .stApp, [data-testid='stAppViewContainer'], [data-testid='stHeader'] { background-color:#000000 !important; }
@@ -43,15 +43,15 @@ style_css = """
 .sniper-crosshair {
     position: absolute;
     top: 50%; left: 50%;
-    width: 40px; height: 40px;
-    border: 2px solid #FF0000;
+    width: 44px; height: 44px;
+    border: 1.5px solid #FF0000;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 10;
 }
-.sniper-crosshair::before { content: ''; position: absolute; top: 50%; left: -10px; width: 60px; height: 1px; background: #FF0000; transform: translateY(-50%); }
-.sniper-crosshair::after { content: ''; position: absolute; left: 50%; top: -10px; width: 1px; height: 60px; background: #FF0000; transform: translateX(-50%); }
+.sniper-crosshair::before { content: ''; position: absolute; top: 50%; left: -15px; width: 74px; height: 1px; background: #FF0000; transform: translateY(-50%); }
+.sniper-crosshair::after { content: ''; position: absolute; left: 50%; top: -15px; width: 1px; height: 74px; background: #FF0000; transform: translateX(-50%); }
 .sniper-dot { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: #FF0000; border-radius: 50%; transform: translate(-50%, -50%); }
 
 iframe { width: 100%; height: 450px; border: none; }
