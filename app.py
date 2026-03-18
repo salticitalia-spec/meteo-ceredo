@@ -9,19 +9,19 @@ st.set_page_config(page_title="Ceredoleso Swiss-HD 12H", page_icon="🎯", layou
 st.markdown("""
 <style>
 .stApp { background-color:#000000 !important; }
-.header-text { color:#FFD700; font-weight:100; letter-spacing:5px; text-transform:uppercase; font-size:24px; text-align:center; margin:20px 0; }
+.header-text { color:#00FFFF; font-weight:100; letter-spacing:5px; text-transform:uppercase; font-size:24px; text-align:center; margin:20px 0; }
 
 /* CONTAINER RADAR */
 .radar-container { 
     position: relative; 
     width: 100%; 
-    height: 550px; 
+    height: 600px; 
     border-radius: 15px; 
     border: 2px solid #333; 
     overflow: hidden; 
 }
 
-/* MIRINO SNIPER METEOSWISS */
+/* MIRINO SNIPER */
 .sniper-crosshair {
     position: absolute; top: 50%; left: 50%; width: 60px; height: 60px;
     border: 2px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%);
@@ -35,64 +35,62 @@ st.markdown("""
     box-shadow: 0 0 25px #FF0000; 
 }
 
-iframe { width: 100%; height: 100%; border: none; filter: grayscale(20%) contrast(110%); }
+iframe { width: 100%; height: 100%; border: none; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. DATA FETCHING (DATI ICON-CH VIA OPEN-METEO) ---
-@st.cache_data(ttl=600)
-def get_swiss_model_data():
-    # Usiamo esplicitamente i dati del modello MeteoSwiss (ICON-CH)
-    url = "https://api.open-meteo.com/v1/forecast?latitude=45.6117&longitude=10.9710&current_weather=true&hourly=precipitation,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome"
-    return requests.get(url).json()
+# --- 3. HEADER ---
+st.markdown('<div class="header-text">Ceredoleso Target: Swiss ICON-CH</div>', unsafe_allow_html=True)
 
-data = get_swiss_model_data()
+# --- 4. RADAR PREDITTIVO 12H (FORZATO SU MODELLO SVIZZERO) ---
+st.markdown('<div style="color:#FF0000; font-size:11px; text-align:center; letter-spacing:2px; margin-bottom:10px; font-weight:bold;">PREDICTIVE RADAR: NEXT 12 HOURS (SWISS MODEL)</div>', unsafe_allow_html=True)
 
-# --- 4. HEADER ---
-st.markdown('<div class="header-text">Ceredoleso Target: Swiss-HD Model</div>', unsafe_allow_html=True)
-
-# --- 5. RADAR PREDITTIVO 12H (MODELLO SVIZZERO) ---
-st.markdown('<div style="color:#FF0000; font-size:11px; text-align:center; letter-spacing:2px; margin-bottom:10px; font-weight:bold;">SORGENTE: METEOSWISS ICON-CH (12H PROJECTION)</div>', unsafe_allow_html=True)
-
-# URL configurato su Meteologix che usa il modello Swiss HD (ICON-CH) 
-# Centrato su Ceredo/Verona per vedere le celle in arrivo da Nord/Ovest
-radar_swiss = "https://meteologix.com/it/model-charts/swisshd-nowcast/verona/precipitation-1h.html"
+# URL Windy ottimizzato:
+# overlay=rain (per vedere la predizione 12h, il radar 'puro' non arriva a 12h nel futuro)
+# model=iconEu (il modello di MeteoSwiss ICON adattato all'Europa)
+radar_windy = "https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&level=surface&overlay=rain&product=iconEu&menu=&message=true&marker=true&calendar=12&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
 
 st.markdown(f'''
 <div class="radar-container">
     <div class="sniper-crosshair"><div class="sniper-dot"></div></div>
-    <iframe src="{radar_swiss}"></iframe>
+    <iframe src="{radar_windy}"></iframe>
 </div>
 ''', unsafe_allow_html=True)
 
-# --- 6. TIMELINE TATTICA 12H (Dati Modello) ---
-st.write("")
-if data and 'hourly' in data:
-    st.markdown('<div style="color:#FFD700; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">PRECIPITATION STREAM (NEXT 12H)</div>', unsafe_allow_html=True)
+# --- 5. TIMELINE TATTICA (Dati ICON-CH) ---
+@st.cache_data(ttl=600)
+def get_swiss_data():
+    # Estraiamo i dati orari precisi del modello ICON-CH
+    url = "https://api.open-meteo.com/v1/forecast?latitude=45.6117&longitude=10.9710&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=1"
+    return requests.get(url).json()
+
+w_data = get_swiss_data()
+
+if w_data and 'hourly' in w_data:
+    st.write("")
+    st.markdown('<div style="color:#00FFFF; font-size:10px; text-align:center; letter-spacing:2px; margin-bottom:10px;">HOURLY PRECISION SCAN (NEXT 12H)</div>', unsafe_allow_html=True)
     
     now_h = datetime.now().hour
     cols = st.columns(6)
     
-    # Visualizziamo 12 ore in due file da 6
     for i in range(12):
         idx = now_h + i
-        with cols[i % 6]:
-            time_str = data['hourly']['time'][idx][-5:]
-            prob = data['hourly']['precipitation_probability'][idx]
-            p_val = data['hourly']['precipitation'][idx]
-            
-            # Colore basato sulla probabilità
-            color = "#FF3311" if prob > 40 else "#FFFF00" if prob > 15 else "#00FF00"
-            
-            st.markdown(f'''
-            <div style="background:#111; border:1px solid #222; border-radius:8px; padding:5px; text-align:center; margin-bottom:5px;">
-                <div style="font-size:10px; color:#666;">{time_str}</div>
-                <div style="font-size:14px; color:white; font-weight:bold;">{p_val}mm</div>
-                <div style="font-size:11px; color:{color};">{prob}%</div>
-            </div>
-            ''', unsafe_allow_html=True)
+        if idx < len(w_data['hourly']['time']):
+            with cols[i % 6]:
+                time_str = w_data['hourly']['time'][idx][-5:]
+                prob = w_data['hourly']['precipitation_probability'][idx]
+                temp = w_data['hourly']['temperature_2m'][idx]
+                p_color = "#FF3311" if prob > 30 else "#00FF00"
+                
+                st.markdown(f'''
+                <div style="background:#111; border:1px solid #333; border-radius:10px; padding:8px; text-align:center; margin-bottom:10px;">
+                    <div style="font-size:10px; color:#666;">{time_str}</div>
+                    <div style="font-size:14px; color:white; font-weight:bold;">{temp}°</div>
+                    <div style="font-size:11px; color:{p_color};">{prob}%</div>
+                </div>
+                ''', unsafe_allow_html=True)
 
-# --- 7. FOOTER ---
+# --- 6. FOOTER ---
 if st.button("🔄 RE-SYNC TARGET"):
     st.cache_data.clear()
     st.rerun()
