@@ -10,8 +10,13 @@ st.set_page_config(page_title="Ceredoleso Sniper", page_icon="🎯", layout="cen
 @st.cache_data(ttl=600)
 def fetch_meteo():
     lat, lon = 45.6117, 10.9710
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=1"
-    return requests.get(url).json()
+    # Chiediamo 2 giorni di previsione per evitare l'IndexError a fine giornata
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=2"
+    try:
+        r = requests.get(url)
+        return r.json()
+    except:
+        return None
 
 def get_aztec_context():
     symbols = ["Cipactli", "Ehecatl", "Calli", "Cuetzpalin", "Coatl", "Miquiztli", "Mazatl", "Tochtli", 
@@ -40,10 +45,8 @@ st.markdown("""
 <style>
     .stApp { background-color:#000; color: #eee; }
     .header-text { color:#00FFFF; font-size:20px; text-align:center; letter-spacing:4px; margin-bottom:15px; font-family:monospace; }
-    
     .radar-box { position: relative; width: 100%; height: 350px; border-radius: 15px; border: 2px solid #333; overflow: hidden; margin-bottom: 20px; }
     .crosshair { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; border: 2px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
-    
     .aztec-wrapper {
         position: relative; width: 260px; height: 260px; margin: 20px auto; border-radius: 50%;
         background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png') center/cover;
@@ -55,11 +58,8 @@ st.markdown("""
     }
     .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring-circle { fill: none; stroke-linecap: round; }
-    
     .aztec-info { text-align: center; margin-bottom: 20px; }
-    .aztec-day { color: #A52; font-size: 16px; font-family: monospace; font-weight: bold; }
-    .aztec-meta { color: #666; font-size: 10px; font-family: monospace; margin-top: 2px; }
-    
+    .aztec-day { color: #A52; font-size: 16px; font-family: monospace; font-weight: bold; text-transform: uppercase;}
     .xiuh-box { 
         text-align: center; margin: 10px auto; padding: 12px; border: 1px solid #600; 
         background: rgba(40,0,0,0.3); border-radius: 10px; max-width: 280px;
@@ -77,14 +77,18 @@ st.markdown('<div class="header-text">CEREDOLESO SNIPER</div>', unsafe_allow_htm
 # Radar
 st.markdown(f'<div class="radar-box"><div class="crosshair"></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Timeline 6h (compatta)
+# Timeline 6h protetta da IndexError
 if fc and 'hourly' in fc:
     cols = st.columns(6)
-    h = datetime.now().hour
+    h_now = datetime.now().hour
+    # Usiamo il modulo % per non eccedere la lunghezza della lista o fetchiamo 2 giorni
     for i in range(6):
-        with cols[i]:
-            p = fc['hourly']['precipitation_probability'][h+i]
-            st.markdown(f"<div style='text-align:center; font-size:10px;'>{fc['hourly']['time'][h+i][-5:]}<br><b style='color:{'#F31' if p > 30 else '#0F0'}'>{p}%</b></div>", unsafe_allow_html=True)
+        idx = h_now + i
+        if idx < len(fc['hourly']['precipitation_probability']):
+            with cols[i]:
+                p = fc['hourly']['precipitation_probability'][idx]
+                time_str = fc['hourly']['time'][idx][-5:]
+                st.markdown(f"<div style='text-align:center; font-size:10px;'>{time_str}<br><b style='color:{'#F31' if p > 30 else '#0F0'}'>{p}%</b></div>", unsafe_allow_html=True)
 
 # Orologio e Countdown
 n = datetime.now()
@@ -106,7 +110,7 @@ st.markdown(f"""
 
 <div class="aztec-info">
     <div class="aztec-day">{day_lab}</div>
-    <div class="aztec-meta">METZTLI: {month_lab} | XIHUATL: {year_lab}</div>
+    <div style="color:#666; font-size:10px; font-family:monospace;">METZTLI: {month_lab} | XIHUATL: {year_lab}</div>
 </div>
 
 <div class="xiuh-box">
