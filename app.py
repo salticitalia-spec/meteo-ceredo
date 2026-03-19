@@ -34,7 +34,7 @@ def get_aztec_context(current_time):
     countdown = (datetime(2027, 11, 15) - current_time).days
     return f"{num_sacro} {simbolo_sacro}", months[month_idx], f"{year_num} {year_symbol}", countdown
 
-# --- 2. STILE CSS (ULTRA-THIN MINIMAL) ---
+# --- 2. STILE CSS (CYAN INTENSO & ULTRA THIN) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
@@ -46,54 +46,58 @@ st.markdown("""
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        margin-top: 30px;
+        margin-top: 40px;
         margin-bottom: 50px;
     }
     
+    /* Logo in ciano intenso */
     .logo-svg {
-        width: 32px;
-        height: 32px;
-        margin-bottom: 20px;
-        opacity: 0.7;
+        width: 40px;
+        height: 40px;
+        margin-bottom: 25px;
+        filter: drop-shadow(0 0 8px #00FFFF);
     }
 
+    /* Titolo: Ciano puro, ultra sottile, con bagliore neon */
     .header-text { 
         color: #00FFFF; 
-        font-size: 16px; 
+        font-size: 17px; 
         font-family: 'Inter', sans-serif; 
-        font-weight: 100; /* PESO MINIMO */
-        letter-spacing: 12px; 
+        font-weight: 100; 
+        letter-spacing: 14px; 
         text-transform: uppercase;
         margin: 0;
         text-align: center;
-        opacity: 0.8;
+        /* Effetto luce intensa */
+        text-shadow: 0 0 12px rgba(0, 255, 255, 0.8), 0 0 2px rgba(0, 255, 255, 1);
     }
 
-    .radar-box { position: relative; width: 100%; height: 350px; border-radius: 2px; border: 1px solid #111; overflow: hidden; margin-bottom: 30px; }
-    .crosshair { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; border: 0.5px solid rgba(255,0,0,0.3); border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
+    .radar-box { position: relative; width: 100%; height: 380px; border-radius: 4px; border: 1px solid #1a1a1a; overflow: hidden; margin-bottom: 30px; }
+    .crosshair { position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; border: 0.5px solid rgba(255,0,0,0.5); border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
     
     .aztec-wrapper {
         position: relative; width: 220px; height: 220px; margin: 30px auto; border-radius: 50%;
         background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png') center/cover;
-        filter: grayscale(1) brightness(0.15); display: flex; align-items: center; justify-content: center; border: 1px solid #0a0a0a;
+        filter: grayscale(1) brightness(0.1); display: flex; align-items: center; justify-content: center; border: 1px solid #0f0f0f;
     }
     
     .digital-clock {
         background: transparent; color: #fff;
-        font-family: 'Inter', sans-serif; font-size: 26px; font-weight: 100; z-index: 5;
+        font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 100; z-index: 5;
+        text-shadow: 0 0 10px rgba(255,255,255,0.3);
     }
 
     .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring-circle { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
     
-    .aztec-info { text-align: center; margin-bottom: 20px; font-family: 'Inter', sans-serif; }
-    .aztec-day { color: #444; font-size: 11px; font-weight: 100; letter-spacing: 5px; text-transform: uppercase; }
+    .aztec-info { text-align: center; margin-bottom: 25px; font-family: 'Inter', sans-serif; }
+    .aztec-day { color: #333; font-size: 11px; font-weight: 100; letter-spacing: 6px; text-transform: uppercase; }
     
     .xiuh-box { 
-        text-align: center; margin: 20px auto; padding: 15px; border-top: 1px solid #0f0f0f; 
-        max-width: 180px;
+        text-align: center; margin: 20px auto; padding: 15px; border-top: 1px solid #111; 
+        max-width: 200px;
     }
-    .xiuh-days { color: #300; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 100; letter-spacing: 3px; }
+    .xiuh-days { color: #200; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 100; letter-spacing: 4px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -105,13 +109,13 @@ s, m, h = now.second, now.minute, now.hour
 fc = fetch_meteo()
 day_lab, month_lab, year_lab, count_val = get_aztec_context(now)
 
-# Intestazione Minimalista
+# Intestazione con Ciano Intenso
 st.markdown(f"""
 <div class="header-container">
     <svg class="logo-svg" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="48" fill="none" stroke="#00FFFF" stroke-width="0.5" stroke-dasharray="2 4"/>
-        <path d="M50 0 L50 100 M0 50 L100 50" stroke="#00FFFF" stroke-width="0.5" opacity="0.3"/>
-        <circle cx="50" cy="50" r="5" fill="#00FFFF" opacity="0.5"/>
+        <circle cx="50" cy="50" r="48" fill="none" stroke="#00FFFF" stroke-width="0.8" stroke-dasharray="1 5"/>
+        <path d="M50 10 L50 40 M50 60 L50 90 M10 50 L40 50 M60 50 L90 50" stroke="#00FFFF" stroke-width="1"/>
+        <circle cx="50" cy="50" r="4" fill="#00FFFF"/>
     </svg>
     <h1 class="header-text">Ceredotlan Tlachieloni</h1>
 </div>
@@ -120,35 +124,24 @@ st.markdown(f"""
 # Radar
 st.markdown(f'<div class="radar-box"><div class="crosshair"></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Timeline 6h
-if fc and 'hourly' in fc:
-    cols = st.columns(6)
-    for i in range(6):
-        idx = h + i
-        if idx < len(fc['hourly']['precipitation_probability']):
-            with cols[i]:
-                p = fc['hourly']['precipitation_probability'][idx]
-                time_label = fc['hourly']['time'][idx][-5:]
-                st.markdown(f"<div style='text-align:center; font-size:9px; font-family:Inter; font-weight:100; color:#333;'>{time_label}<br><span style='color:{'#A00' if p > 30 else '#060'}'>{p}%</span></div>", unsafe_allow_html=True)
-
-# Orologio
+# Orologio e Info
 off_h = 289.02 - (((h % 24) + m/60) * 289.02 / 24)
 off_m = 251.32 - ((m + s/60) * 251.32 / 60)
 off_s = 213.62 - (s * 213.62 / 60)
 
 st.markdown(f"""
 <div class="aztec-wrapper">
-    <div class="digital-clock">{now.strftime("%H:%M")}<span style="color:#00FFFF; font-size:12px; opacity:0.2;">:{s:02d}</span></div>
+    <div class="digital-clock">{now.strftime("%H:%M")}<span style="color:#00FFFF; font-size:14px; opacity:0.4;">:{s:02d}</span></div>
     <svg class="rings-svg" viewBox="0 0 100 100">
-        <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="0.3" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.1"/>
-        <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#00FFFF" stroke-width="0.3" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.15"/>
-        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#00FFFF" stroke-width="0.3" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.25"/>
+        <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="0.4" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.15"/>
+        <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#00FFFF" stroke-width="0.4" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.25"/>
+        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#00FFFF" stroke-width="0.4" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.4"/>
     </svg>
 </div>
 
 <div class="aztec-info">
     <div class="aztec-day">{day_lab}</div>
-    <div style="color:#222; font-size:8px; font-family:Inter; letter-spacing:2px; margin-top:5px;">{month_lab.upper()} | {year_lab.upper()}</div>
+    <div style="color:#222; font-size:9px; font-family:Inter; letter-spacing:3px; margin-top:5px;">{month_lab.upper()} | {year_lab.upper()}</div>
 </div>
 
 <div class="xiuh-box">
