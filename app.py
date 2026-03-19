@@ -43,11 +43,10 @@ st.markdown("""
         margin-bottom: 25px;
     }
     
-    /* LOGO LASER: Spessori Identici 0.5px */
     .logo-laser {
         width: 160px; 
         height: 160px;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 
     .header-text { 
@@ -61,6 +60,7 @@ st.markdown("""
         background: linear-gradient(90deg, #8A2BE2 0%, #007BFF 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        -webkit-font-smoothing: antialiased;
     }
 
     .radar-box { 
@@ -73,7 +73,8 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-top: 20px;
+        margin-top: 10px;
+        padding-bottom: 30px;
     }
 
     .digital-clock {
@@ -95,7 +96,6 @@ day_lab, count_val = get_aztec_context(now)
 
 # --- 4. INTERFACCIA ---
 
-# Header con Spessori Costanti (0.5)
 st.markdown(f"""
 <div class="header-container">
     <svg class="logo-laser" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -122,14 +122,12 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Radar
 st.markdown(f'<div class="radar-box"><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Sezione Orologio
 st.markdown(f"""
 <div class="clock-section">
     <div class="digital-clock">
-        {now.strftime("%H:%M")}<span style="color:#007BFF; font-size:16px; opacity:0.6;">:{now.second:02d}</span>
+        {now.strftime("%H:%M")}<span style="color:#007BFF; font-size:16px; opacity:06;">:{now.second:02d}</span>
     </div>
     <div style="color:#444; font-size:10px; letter-spacing:3px;">{day_lab.upper()}</div>
     <div class="countdown-text">{count_val} DAYS</div>
