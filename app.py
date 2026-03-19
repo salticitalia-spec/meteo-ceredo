@@ -3,7 +3,7 @@ import requests
 import time
 from datetime import datetime, timedelta
 
-# --- 1. CONFIGURAZIONE ---
+# --- 1. CONFIGURAZIONE PAGINA ---
 st.set_page_config(page_title="Ceredotlan Tlachieloni", page_icon="🎯", layout="centered")
 
 @st.cache_data(ttl=600)
@@ -11,7 +11,8 @@ def fetch_meteo():
     lat, lon = 45.6117, 10.9710
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=2"
     try:
-        return requests.get(url).json()
+        response = requests.get(url, timeout=5)
+        return response.json()
     except:
         return None
 
@@ -26,7 +27,7 @@ def get_aztec_context(current_time):
     countdown = (datetime(2027, 11, 15) - current_time).days
     return f"{num_sacro} {simbolo_sacro}", countdown
 
-# --- 2. STILE CSS (LASER VIOLET-BLUE & COMPACT DESIGN) ---
+# --- 2. STILE CSS (LASER VIOLET-BLUE & COMPACT) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
@@ -39,23 +40,22 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         margin-top: 10px;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
     
-    /* ICONA LASER PIEDRA DEL SOL: Grande e definita */
+    /* ICONA PIEDRA DEL SOL LASER */
     .logo-laser {
-        width: 180px; 
-        height: 180px;
+        width: 160px; 
+        height: 160px;
         margin-bottom: 5px;
-        filter: drop-shadow(0 0 2px #007BFF);
     }
 
     /* TITOLO: Ultra sottile, compatto, gradiente laser */
     .header-text { 
         font-family: 'Inter', sans-serif; 
         font-weight: 100 !important;
-        font-size: 26px;
-        letter-spacing: 1px; 
+        font-size: 24px;
+        letter-spacing: 1px; /* Compatto come richiesto */
         text-transform: uppercase;
         margin: 0;
         text-align: center;
@@ -75,25 +75,32 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-top: 10px;
+        margin-top: 5px;
     }
 
     .digital-clock {
         color: #fff; font-family: 'Inter', sans-serif; 
-        font-size: 32px; font-weight: 100;
+        font-size: 30px; font-weight: 100;
+    }
+
+    .aztec-day-label {
+        color: #444; font-family: 'Inter', sans-serif;
+        font-size: 10px; letter-spacing: 3px; margin-top: 2px;
     }
 
     .countdown-text {
         color: #8A2BE2; font-family: 'Inter', sans-serif; 
-        font-size: 12px; letter-spacing: 4px; opacity: 0.6;
-        margin-top: 10px;
+        font-size: 12px; letter-spacing: 4px; opacity: 0.5;
+        margin-top: 12px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. UI GENERATION ---
+# --- 3. LOGICA TEMPORALE ---
 now = datetime.now() + timedelta(hours=1)
 day_lab, count_val = get_aztec_context(now)
+
+# --- 4. INTERFACCIA ---
 
 # Header con Icona Piedra del Sol e Titolo Laser
 st.markdown(f"""
@@ -105,32 +112,13 @@ st.markdown(f"""
                 <stop offset="100%" style="stop-color:#007BFF;stop-opacity:1" />
             </linearGradient>
         </defs>
-        <circle cx="50" cy="50" r="48" stroke="url(#laserGrad)" stroke-width="0.5" fill="none" opacity="0.3"/>
-        <circle cx="50" cy="50" r="38" stroke="url(#laserGrad)" stroke-width="0.8" fill="none" stroke-dasharray="1 2"/>
         
-        <path d="M35 35 L45 45 M65 35 L55 45 M35 65 L45 55 M65 65 L55 55" stroke="url(#laserGrad)" stroke-width="0.5"/>
+        <circle cx="50" cy="50" r="48" stroke="url(#laserGrad)" stroke-width="0.3" fill="none" opacity="0.3"/>
+        <circle cx="50" cy="50" r="42" stroke="url(#laserGrad)" stroke-width="0.5" fill="none" stroke-dasharray="1 3"/>
+        <circle cx="50" cy="50" r="32" stroke="url(#laserGrad)" stroke-width="0.4" fill="none"/>
         
-        <circle cx="50" cy="50" r="12" stroke="url(#laserGrad)" stroke-width="1" fill="none"/>
-        <path d="M50 38 L50 62 M38 50 L62 50" stroke="url(#laserGrad)" stroke-width="1"/>
-        <circle cx="50" cy="50" r="3" fill="url(#laserGrad)"/>
+        <path d="M32 32 L42 42 M68 32 L58 42 M32 68 L42 58 M68 68 L58 58" stroke="url(#laserGrad)" stroke-width="0.8"/>
+        <rect x="44" y="44" width="12" height="12" stroke="url(#laserGrad)" stroke-width="0.5" fill="none" transform="rotate(45 50 50)"/>
         
-        <path d="M50 0 L50 10 M50 90 L50 100 M0 50 L10 50 M90 50 L100 50" stroke="url(#laserGrad)" stroke-width="0.8"/>
-    </svg>
-    <h1 class="header-text">Ceredotlan Tlachieloni</h1>
-</div>
-""", unsafe_allow_html=True)
-
-# Radar
-st.markdown(f'<div class="radar-box"><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
-
-# Orologio e Countdown
-st.markdown(f"""
-<div class="clock-section">
-    <div class="digital-clock">{now.strftime("%H:%M")}<span style="color:#007BFF; font-size:14px; opacity:0.5;">:{now.second:02d}</span></div>
-    <div style="color:#555; font-size:10px; letter-spacing:2px; margin-top:5px;">{day_lab.upper()}</div>
-    <div class="countdown-text">{count_val} DAYS UNTIL RESET</div>
-</div>
-""", unsafe_allow_html=True)
-
-time.sleep(1)
-st.rerun()
+        <circle cx="50" cy="50" r="10" stroke="url(#laserGrad)" stroke-width="1.2" fill="none"/>
+        <path d="M50 35 L50 65 M35 50 L
