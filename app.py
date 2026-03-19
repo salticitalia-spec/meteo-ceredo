@@ -1,11 +1,10 @@
 import streamlit as st
 import requests
-import pandas as pd
 import time
 from datetime import datetime, timedelta
 
 # --- 1. CONFIGURAZIONE ---
-st.set_page_config(page_title="Ceredoleso Sniper", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Ceredotlan Tlachieloni", page_icon="🎯", layout="centered")
 
 @st.cache_data(ttl=600)
 def fetch_meteo():
@@ -42,7 +41,31 @@ def get_aztec_context(current_time):
 st.markdown("""
 <style>
     .stApp { background-color:#000; color: #eee; }
-    .header-text { color:#00FFFF; font-size:20px; text-align:center; letter-spacing:4px; margin-bottom:15px; font-family:monospace; }
+    
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .aztec-glifo {
+        width: 60px;
+        filter: drop-shadow(0 0 5px #00FFFF);
+    }
+
+    .header-text { 
+        color:#00FFFF; 
+        font-size:24px; 
+        text-align:center; 
+        letter-spacing:6px; 
+        font-family:monospace; 
+        font-weight:bold; 
+        text-shadow: 0 0 10px #00FFFF;
+        margin: 0;
+    }
+
     .radar-box { position: relative; width: 100%; height: 350px; border-radius: 15px; border: 2px solid #333; overflow: hidden; margin-bottom: 20px; }
     .crosshair { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; border: 2px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
     
@@ -51,10 +74,12 @@ st.markdown("""
         background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png') center/cover;
         filter: sepia(0.3) brightness(0.7); display: flex; align-items: center; justify-content: center; border: 2px solid #222;
     }
+    
     .digital-clock {
         background: rgba(0,0,0,0.85); padding: 5px 12px; border-radius: 8px; color: #fff;
         font-family: monospace; font-size: 24px; font-weight: bold; border: 1px solid #333; z-index: 5;
     }
+
     .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring-circle { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
     
@@ -69,7 +94,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LOGICA ORARIO (AVANZATO DI 1 ORA) ---
+# --- 3. LOGICA TEMPORALE (+1 ORA) ---
 now = datetime.now() + timedelta(hours=1)
 s, m, h = now.second, now.minute, now.hour
 
@@ -77,12 +102,20 @@ s, m, h = now.second, now.minute, now.hour
 fc = fetch_meteo()
 day_lab, month_lab, year_lab, count_val = get_aztec_context(now)
 
-st.markdown('<div class="header-text">CEREDOLESO SNIPER</div>', unsafe_allow_html=True)
+# Intestazione con Glifo
+glifo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Aztec_calendar_central_face.svg/120px-Aztec_calendar_central_face.svg.png"
 
-# Radar
+st.markdown(f"""
+<div class="header-container">
+    <img src="{glifo_url}" class="aztec-glifo">
+    <h1 class="header-text">CEREDOTLAN TLACHIELONI</h1>
+</div>
+""", unsafe_allow_html=True)
+
+# Radar Meteorologico
 st.markdown(f'<div class="radar-box"><div class="crosshair"></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Timeline 6h (allineata all'ora forzata)
+# Timeline Previsioni 6h
 if fc and 'hourly' in fc:
     cols = st.columns(6)
     for i in range(6):
@@ -93,7 +126,7 @@ if fc and 'hourly' in fc:
                 time_label = fc['hourly']['time'][idx][-5:]
                 st.markdown(f"<div style='text-align:center; font-size:10px;'>{time_label}<br><b style='color:{'#F31' if p > 30 else '#0F0'}'>{p}%</b></div>", unsafe_allow_html=True)
 
-# Calcolo SVG
+# Orologio Circolare SVG
 off_h = 289.02 - (((h % 24) + m/60) * 289.02 / 24)
 off_m = 251.32 - ((m + s/60) * 251.32 / 60)
 off_s = 213.62 - (s * 213.62 / 60)
@@ -107,7 +140,7 @@ st.markdown(f"""
         <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.7"/>
     </svg>
 </div>
-<div style="text-align:center; color:#444; font-size:10px; letter-spacing:4px; font-weight:bold; margin-top:-10px;">TIEMPO ETERNO DE CEREDO</div>
+<div style="text-align:center; color:#444; font-size:10px; letter-spacing:4px; font-weight:bold; margin-top:-10px;">TIEMPO ETERNO DE CEREDOTLAN</div>
 
 <div class="aztec-info">
     <div class="aztec-day">{day_lab}</div>
@@ -121,5 +154,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# Loop di aggiornamento ogni secondo
 time.sleep(1)
 st.rerun()
