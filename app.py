@@ -34,7 +34,7 @@ def get_aztec_context(current_time):
     countdown = (datetime(2027, 11, 15) - current_time).days
     return f"{num_sacro} {simbolo_sacro}", months[month_idx], f"{year_num} {year_symbol}", countdown
 
-# --- 2. STILE CSS (LOGO VISIBILE & TITOLO ULTRA-THIN) ---
+# --- 2. STILE CSS (COERENZA CROMATICA TOTALE) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
@@ -47,27 +47,32 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         margin-top: 40px;
-        margin-bottom: 50px;
+        margin-bottom: 45px;
     }
     
-    /* Logo: Ora con contrasto massimo e glow */
+    /* Logo in Blu Elettrico Puro */
     .logo-svg {
-        width: 45px;
-        height: 45px;
+        width: 40px;
+        height: 40px;
         margin-bottom: 20px;
-        filter: drop-shadow(0 0 10px #007BFF); /* Effetto neon per visibilità */
+        fill: none;
+        stroke: #007BFF;
+        filter: drop-shadow(0 0 2px rgba(0, 123, 255, 0.5));
     }
 
+    /* Titolo in Blu Elettrico Puro - Ultra Sottile */
     .header-text { 
         color: #007BFF; 
-        font-size: 18px; 
+        font-size: 19px; 
         font-family: 'Inter', sans-serif; 
-        font-weight: 100 !important;
-        letter-spacing: 16px; 
+        font-weight: 100;
+        letter-spacing: 15px; 
         text-transform: uppercase;
         margin: 0;
         text-align: center;
-        text-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+        /* Rimosso glow pesante per coerenza con le linee del logo */
+        text-shadow: none;
+        -webkit-font-smoothing: antialiased;
     }
 
     .radar-box { position: relative; width: 100%; height: 380px; border-radius: 2px; border: 1px solid #111; overflow: hidden; margin-bottom: 40px; }
@@ -75,7 +80,7 @@ st.markdown("""
     .aztec-wrapper {
         position: relative; width: 220px; height: 220px; margin: 30px auto; border-radius: 50%;
         background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png') center/cover;
-        filter: grayscale(1) brightness(0.12); display: flex; align-items: center; justify-content: center; border: 1px solid #0a0a0a;
+        filter: grayscale(1) brightness(0.1); display: flex; align-items: center; justify-content: center; border: 1px solid #0a0a0a;
     }
     
     .digital-clock {
@@ -87,7 +92,7 @@ st.markdown("""
     .ring-circle { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
     
     .xiuh-box { text-align: center; margin: 20px auto; max-width: 180px; }
-    .xiuh-days { color: #007BFF; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 100; letter-spacing: 4px; opacity: 0.8; }
+    .xiuh-days { color: #007BFF; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 100; letter-spacing: 4px; opacity: 0.7; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -99,13 +104,13 @@ s, m, h = now.second, now.minute, now.hour
 fc = fetch_meteo()
 day_lab, month_lab, year_lab, count_val = get_aztec_context(now)
 
-# Intestazione con Logo Ridisegnato (Puro Blu Elettrico)
+# Intestazione Coerente (Blu Elettrico #007BFF)
 st.markdown(f"""
 <div class="header-container">
-    <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="45" fill="none" stroke="#007BFF" stroke-width="2" stroke-dasharray="6 4"/>
-        <path d="M50 10 L50 90 M10 50 L90 50" stroke="#007BFF" stroke-width="2"/>
-        <circle cx="50" cy="50" r="8" fill="#007BFF"/>
+    <svg class="logo-svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" stroke="#007BFF" stroke-width="1.5" stroke-dasharray="4 6"/>
+        <path d="M50 5 L50 95 M5 50 L95 50" stroke="#007BFF" stroke-width="1.5"/>
+        <circle cx="50" cy="50" r="6" fill="#007BFF" stroke="none"/>
     </svg>
     <h1 class="header-text">Ceredotlan Tlachieloni</h1>
 </div>
@@ -121,11 +126,11 @@ off_s = 213.62 - (s * 213.62 / 60)
 
 st.markdown(f"""
 <div class="aztec-wrapper">
-    <div class="digital-clock">{now.strftime("%H:%M")}<span style="color:#007BFF; font-size:12px; opacity:0.6;">:{s:02d}</span></div>
+    <div class="digital-clock">{now.strftime("%H:%M")}<span style="color:#007BFF; font-size:12px; opacity:0.4;">:{s:02d}</span></div>
     <svg class="rings-svg" viewBox="0 0 100 100">
-        <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#007BFF" stroke-width="0.5" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.2"/>
-        <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007BFF" stroke-width="0.5" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.3"/>
-        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#007BFF" stroke-width="0.5" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.5"/>
+        <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#007BFF" stroke-width="0.3" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.1"/>
+        <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007BFF" stroke-width="0.3" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.2"/>
+        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#007BFF" stroke-width="0.3" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.4"/>
     </svg>
 </div>
 
