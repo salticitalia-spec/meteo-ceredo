@@ -27,7 +27,7 @@ def get_aztec_context(current_time):
     countdown = (datetime(2027, 11, 15) - current_time).days
     return f"{num_sacro} {simbolo_sacro}", countdown
 
-# --- 2. STILE CSS (MONO-WEIGHT LASER) ---
+# --- 2. STILE CSS (LASER VIOLET-BLUE & COMPACT) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
@@ -96,6 +96,7 @@ day_lab, count_val = get_aztec_context(now)
 
 # --- 4. INTERFACCIA ---
 
+# Header con Logo SVG Monopeso 0.5
 st.markdown(f"""
 <div class="header-container">
     <svg class="logo-laser" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -109,30 +110,33 @@ st.markdown(f"""
         <circle cx="50" cy="50" r="48" stroke="url(#laserGrad)" stroke-width="0.5" fill="none" />
         <circle cx="50" cy="50" r="40" stroke="url(#laserGrad)" stroke-width="0.5" fill="none" stroke-dasharray="2 2"/>
         <circle cx="50" cy="50" r="32" stroke="url(#laserGrad)" stroke-width="0.5" fill="none"/>
-        
+
         <path d="M35 35 L45 45 M65 35 L55 45 M35 65 L45 55 M65 65 L55 55" stroke="url(#laserGrad)" stroke-width="0.5"/>
-        
+
         <circle cx="50" cy="50" r="12" stroke="url(#laserGrad)" stroke-width="0.5" fill="none"/>
         <path d="M50 30 L50 70 M30 50 L70 50" stroke="url(#laserGrad)" stroke-width="0.5"/>
         <circle cx="50" cy="50" r="2.5" fill="url(#laserGrad)"/>
-        
+
         <path d="M50 0 L50 100 M0 50 L100 50" stroke="url(#laserGrad)" stroke-width="0.5" opacity="0.4"/>
     </svg>
     <h1 class="header-text">Ceredotlan Tlachieloni</h1>
 </div>
 """, unsafe_allow_html=True)
 
+# Radar
 st.markdown(f'<div class="radar-box"><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
+# Sezione Orologio e Countdown
 st.markdown(f"""
 <div class="clock-section">
     <div class="digital-clock">
-        {now.strftime("%H:%M")}<span style="color:#007BFF; font-size:16px; opacity:06;">:{now.second:02d}</span>
+        {now.strftime("%H:%M")}<span style="color:#007BFF; font-size:16px; opacity:0.6;">:{now.second:02d}</span>
     </div>
     <div style="color:#444; font-size:10px; letter-spacing:3px;">{day_lab.upper()}</div>
     <div class="countdown-text">{count_val} DAYS</div>
 </div>
 """, unsafe_allow_html=True)
 
+# Refresh automatico
 time.sleep(1)
 st.rerun()
