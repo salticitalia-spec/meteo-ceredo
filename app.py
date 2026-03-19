@@ -34,7 +34,7 @@ def get_aztec_context(current_time):
     countdown = (datetime(2027, 11, 15) - current_time).days
     return f"{num_sacro} {simbolo_sacro}", months[month_idx], f"{year_num} {year_symbol}", countdown
 
-# --- 2. STILE CSS (ULTRA-THIN & DEEP VIOLET) ---
+# --- 2. STILE CSS (TITOLO VIOLA DENSO) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
@@ -50,17 +50,17 @@ st.markdown("""
         margin-bottom: 50px;
     }
     
-    /* Logo in Viola Profondo con leggero bagliore */
+    /* Logo coordinato */
     .logo-svg {
-        width: 25px;
-        height: 25px;
+        width: 30px;
+        height: 30px;
         margin-bottom: 25px;
-        filter: drop-shadow(0 0 5px #8A2BE2);
+        opacity: 0.8;
     }
 
-    /* Titolo: Viola profondo (#8A2BE2), ultra sottile */
+    /* TITOLO: Viola denso (#4B0082 - Indigo), ultra sottile con bagliore neon */
     .header-text { 
-        color: #8A2BE2; 
+        color: #4B0082; 
         font-size: 18px; 
         font-family: 'Inter', sans-serif; 
         font-weight: 100 !important;
@@ -68,17 +68,18 @@ st.markdown("""
         text-transform: uppercase;
         margin: 0;
         text-align: center;
-        text-shadow: 0 0 2px rgba(138, 43, 226, 0.5);
+        /* Effetto bagliore intenso viola denso */
+        text-shadow: 0 0 10px rgba(75, 0, 130, 0.8), 0 0 2px rgba(75, 0, 130, 1);
         -webkit-font-smoothing: antialiased;
     }
 
     .radar-box { position: relative; width: 100%; height: 380px; border-radius: 2px; border: 1px solid #111; overflow: hidden; margin-bottom: 40px; }
-    .crosshair { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; border: 0.5px solid rgba(138, 43, 226, 0.4); border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
+    .crosshair { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; border: 0.5px solid rgba(255,0,0,0.3); border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
     
     .aztec-wrapper {
-        position: relative; width: 200px; height: 200px; margin: 30px auto; border-radius: 50%;
+        position: relative; width: 220px; height: 220px; margin: 30px auto; border-radius: 50%;
         background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png') center/cover;
-        filter: grayscale(1) brightness(0.08); display: flex; align-items: center; justify-content: center; border: 1px solid #080808;
+        filter: grayscale(1) brightness(0.12); display: flex; align-items: center; justify-content: center; border: 1px solid #0a0a0a;
     }
     
     .digital-clock {
@@ -89,11 +90,11 @@ st.markdown("""
     .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring-circle { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
     
-    .aztec-info { text-align: center; margin-bottom: 25px; font-family: 'Inter', sans-serif; }
-    .aztec-day { color: #222; font-size: 10px; font-weight: 100; letter-spacing: 6px; text-transform: uppercase; }
+    .aztec-info { text-align: center; margin-bottom: 20px; font-family: 'Inter', sans-serif; }
+    .aztec-day { color: #444; font-size: 11px; font-weight: 100; letter-spacing: 5px; text-transform: uppercase; }
     
-    .xiuh-box { text-align: center; margin: 20px auto; max-width: 200px; opacity: 0.3; }
-    .xiuh-days { color: #8A2BE2; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 100; letter-spacing: 4px; }
+    .xiuh-box { text-align: center; margin: 20px auto; max-width: 180px; }
+    .xiuh-days { color: #300; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 100; letter-spacing: 3px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -105,12 +106,13 @@ s, m, h = now.second, now.minute, now.hour
 fc = fetch_meteo()
 day_lab, month_lab, year_lab, count_val = get_aztec_context(now)
 
-# Intestazione Minimalista Viola
+# Intestazione con Viola Denso
 st.markdown(f"""
 <div class="header-container">
     <svg class="logo-svg" viewBox="0 0 100 100">
-        <path d="M50 0 L50 100 M0 50 L100 50" stroke="#8A2BE2" stroke-width="0.5" opacity="0.6"/>
-        <circle cx="50" cy="50" r="4" fill="#8A2BE2"/>
+        <circle cx="50" cy="50" r="48" fill="none" stroke="#4B0082" stroke-width="0.5" stroke-dasharray="2 4"/>
+        <path d="M50 0 L50 100 M0 50 L100 50" stroke="#4B0082" stroke-width="0.5" opacity="0.4"/>
+        <circle cx="50" cy="50" r="5" fill="#4B0082" opacity="0.6"/>
     </svg>
     <h1 class="header-text">Ceredotlan Tlachieloni</h1>
 </div>
@@ -119,24 +121,24 @@ st.markdown(f"""
 # Radar
 st.markdown(f'<div class="radar-box"><div class="crosshair"></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Orologio e Info (Design Sottile Viola)
+# Orologio e Info (Sottili e Coordinate)
 off_h = 289.02 - (((h % 24) + m/60) * 289.02 / 24)
 off_m = 251.32 - ((m + s/60) * 251.32 / 60)
 off_s = 213.62 - (s * 213.62 / 60)
 
 st.markdown(f"""
 <div class="aztec-wrapper">
-    <div class="digital-clock">{now.strftime("%H:%M")}<span style="color:#8A2BE2; font-size:12px; opacity:0.4;">:{s:02d}</span></div>
+    <div class="digital-clock">{now.strftime("%H:%M")}<span style="color:#4B0082; font-size:12px; opacity:0.3;">:{s:02d}</span></div>
     <svg class="rings-svg" viewBox="0 0 100 100">
-        <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#8A2BE2" stroke-width="0.3" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.1"/>
-        <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#8A2BE2" stroke-width="0.3" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.15"/>
-        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#8A2BE2" stroke-width="0.3" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.25"/>
+        <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#4B0082" stroke-width="0.3" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.1"/>
+        <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#4B0082" stroke-width="0.3" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.15"/>
+        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#4B0082" stroke-width="0.3" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.25"/>
     </svg>
 </div>
 
 <div class="aztec-info">
     <div class="aztec-day">{day_lab}</div>
-    <div style="color:#111; font-size:8px; font-family:Inter; letter-spacing:3px; margin-top:5px;">{month_lab.upper()} | {year_lab.upper()}</div>
+    <div style="color:#222; font-size:8px; font-family:Inter; letter-spacing:2px; margin-top:5px;">{month_lab.upper()} | {year_lab.upper()}</div>
 </div>
 
 <div class="xiuh-box">
