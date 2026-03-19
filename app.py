@@ -16,18 +16,41 @@ def fetch_meteo():
     except:
         return None
 
-def get_aztec_context(current_time):
+def get_full_aztec_date(current_time):
+    # Simboli Tonalpohualli (Giorno)
     symbols = ["Cipactli", "Ehecatl", "Calli", "Cuetzpalin", "Coatl", "Miquiztli", "Mazatl", "Tochtli", 
                "Atl", "Itzcuintli", "Ozomatli", "Malinalli", "Acatl", "Ocelotl", "Quauhtli", "Cozcaquauhtli", 
                "Olin", "Tecpatl", "Quiahuitl", "Xochitl"]
-    ref_date = datetime(2024, 1, 1)
+    
+    # Mesi Xiuhpohualli (20 giorni ciascuno)
+    months = ["Izcalli", "Atlcahualo", "Tlacaxipehualiztli", "Tozoztontli", "Huey Tozoztli", "Toxcatl", 
+              "Etzalcualiztli", "Tecuilhuitontli", "Huey Tecuilhuitl", "Tlaxochimaco", "Xocotl Huetzi", 
+              "Ochpaniztli", "Teotleco", "Tepeilhuitl", "Quecholli", "Panquetzaliztli", "Atemoztli", "Tititl"]
+    
+    # Anni (Ciclo di 52 anni)
+    year_carriers = ["Tecpatl", "Calli", "Tochtli", "Acatl"]
+    
+    ref_date = datetime(2024, 1, 1) # Riferimento: 1 Tecpatl
     delta_days = (current_time - ref_date).days
-    num_sacro = (delta_days % 13) + 1
-    simbolo_sacro = symbols[(delta_days + 12) % 20]
+    
+    # Calcolo Giorno (Tonalpohualli)
+    num_day = (delta_days % 13) + 1
+    sym_day = symbols[(delta_days + 12) % 20]
+    
+    # Calcolo Mese (Xiuhpohualli - approssimativo per visualizzazione)
+    month_idx = (delta_days % 365) // 20
+    current_month = months[min(month_idx, 17)]
+    
+    # Calcolo Anno
+    year_num = ((delta_days // 365) % 13) + 1
+    year_sym = year_carriers[(delta_days // 365) % 4]
+    
     countdown = (datetime(2027, 11, 15) - current_time).days
-    return f"{num_sacro} {simbolo_sacro}", countdown
+    
+    full_date = f"{num_day} {sym_day} • {current_month} • {year_num} {year_sym}"
+    return full_date, countdown
 
-# --- 2. STILE CSS (TUTTO QUI PER EVITARE ERRORI DI SINTASSI NELLE F-STRINGS) ---
+# --- 2. STILE CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
@@ -41,19 +64,19 @@ st.markdown("""
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .radar-box { position: relative; width: 100%; height: 400px; border-radius: 4px; border: 1px solid #111; overflow: hidden; margin-bottom: 30px; }
-    .clock-section { display: flex; flex-direction: column; align-items: center; margin-top: 10px; padding-bottom: 30px; }
-    .digital-clock { color: #fff; font-family: 'Inter', sans-serif; font-size: 34px; font-weight: 100; letter-spacing: 2px; }
-    .aztec-label { color: #444; font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 3px; margin-top: 5px; text-transform: uppercase; }
-    .countdown-text { color: #8A2BE2; font-family: 'Inter', sans-serif; font-size: 12px; letter-spacing: 4px; opacity: 0.6; margin-top: 15px; }
+    .clock-section { display: flex; flex-direction: column; align-items: center; margin-top: 10px; padding-bottom: 40px; }
+    .digital-clock { color: #fff; font-family: 'Inter', sans-serif; font-size: 38px; font-weight: 100; letter-spacing: 2px; }
+    .aztec-full-date { color: #555; font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 3px; margin-top: 8px; text-transform: uppercase; }
+    .countdown-text { color: #8A2BE2; font-family: 'Inter', sans-serif; font-size: 13px; letter-spacing: 5px; opacity: 0.6; margin-top: 18px; }
 </style>
 """, unsafe_allow_html=True)
 
 # --- 3. LOGICA TEMPORALE ---
 now = datetime.now() + timedelta(hours=1)
-day_lab, count_val = get_aztec_context(now)
+full_aztec, count_val = get_full_aztec_date(now)
 
 # --- 4. INTERFACCIA ---
-# Logo e Titolo (F-string pulita)
+# Logo Laser 0.5 e Titolo
 st.markdown(f"""
 <div class="header-container">
     <svg class="logo-laser" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -79,14 +102,14 @@ st.markdown(f"""
 # Radar
 st.markdown(f'<div class="radar-box"><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Orologio e Countdown
+# Orologio e Data Azteca Ripristinata
 st.markdown(f"""
 <div class="clock-section">
     <div class="digital-clock">
-        {now.strftime("%H:%M")}<span style="color:#007BFF; font-size:16px; opacity:0.6;">:{now.second:02d}</span>
+        {now.strftime("%H:%M")}<span style="color:#007BFF; font-size:18px; opacity:0.6;">:{now.second:02d}</span>
     </div>
-    <div class="aztec-label">{day_lab}</div>
-    <div class="countdown-text">{count_val} DAYS</div>
+    <div class="aztec-full-date">{full_aztec}</div>
+    <div class="countdown-text">{count_val} DAYS UNTIL RESET</div>
 </div>
 """, unsafe_allow_html=True)
 
