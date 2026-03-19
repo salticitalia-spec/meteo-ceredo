@@ -10,14 +10,13 @@ st.set_page_config(page_title="Ceredoleso Sniper", page_icon="🎯", layout="cen
 @st.cache_data(ttl=600)
 def fetch_meteo():
     lat, lon = 45.6117, 10.9710
-    # Chiediamo 2 giorni per evitare errori di indice a mezzanotte
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=2"
     try:
         return requests.get(url).json()
     except:
         return None
 
-def get_aztec_context():
+def get_aztec_context(current_time):
     symbols = ["Cipactli", "Ehecatl", "Calli", "Cuetzpalin", "Coatl", "Miquiztli", "Mazatl", "Tochtli", 
                "Atl", "Itzcuintli", "Ozomatli", "Malinalli", "Acatl", "Ocelotl", "Quauhtli", "Cozcaquauhtli", 
                "Olin", "Tecpatl", "Quiahuitl", "Xochitl"]
@@ -26,19 +25,17 @@ def get_aztec_context():
               "Ochpaniztli", "Teotleco", "Tepeilhuitl", "Quecholli", "Panquetzaliztli", "Atemoztli", "Tititl"]
     years = ["Acatl", "Tecpatl", "Calli", "Tochtli"]
 
-    now = datetime.now()
     ref_date = datetime(2024, 1, 1)
-    delta_days = (now - ref_date).days
+    delta_days = (current_time - ref_date).days
     
     num_sacro = (delta_days % 13) + 1
     simbolo_sacro = symbols[(delta_days + 12) % 20]
-    month_idx = min(int(now.timetuple().tm_yday / 20), 17)
+    month_idx = min(int(current_time.timetuple().tm_yday / 20), 17)
     
-    # 2026 = 1-Tochtli (Anno del Coniglio)
-    year_num = ((now.year - 2024 + 11) % 13) + 1
-    year_symbol = years[(now.year - 2024) % 4]
+    year_num = ((current_time.year - 2024 + 11) % 13) + 1
+    year_symbol = years[(current_time.year - 2024) % 4]
     
-    countdown = (datetime(2027, 11, 15) - now).days
+    countdown = (datetime(2027, 11, 15) - current_time).days
     return f"{num_sacro} {simbolo_sacro}", months[month_idx], f"{year_num} {year_symbol}", countdown
 
 # --- 2. STILE CSS ---
@@ -72,39 +69,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. UI ---
+# --- 3. LOGICA ORARIO (AVANZATO DI 1 ORA) ---
+now = datetime.now() + timedelta(hours=1)
+s, m, h = now.second, now.minute, now.hour
+
+# --- 4. UI ---
 fc = fetch_meteo()
-day_lab, month_lab, year_lab, count_val = get_aztec_context()
+day_lab, month_lab, year_lab, count_val = get_aztec_context(now)
 
 st.markdown('<div class="header-text">CEREDOLESO SNIPER</div>', unsafe_allow_html=True)
 
 # Radar
 st.markdown(f'<div class="radar-box"><div class="crosshair"></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Timeline 6h
+# Timeline 6h (allineata all'ora forzata)
 if fc and 'hourly' in fc:
     cols = st.columns(6)
-    h_now = datetime.now().hour
     for i in range(6):
-        idx = h_now + i
+        idx = h + i
         if idx < len(fc['hourly']['precipitation_probability']):
             with cols[i]:
                 p = fc['hourly']['precipitation_probability'][idx]
                 time_label = fc['hourly']['time'][idx][-5:]
                 st.markdown(f"<div style='text-align:center; font-size:10px;'>{time_label}<br><b style='color:{'#F31' if p > 30 else '#0F0'}'>{p}%</b></div>", unsafe_allow_html=True)
 
-# Logica Orologio in Tempo Reale
-now = datetime.now()
-s = now.second
-m = now.minute
-h = now.hour
-
-# Calcolo Dashoffset per i cerchi (SVG Circumference)
-# Ore (Cerchio esterno - 289.02)
+# Calcolo SVG
 off_h = 289.02 - (((h % 24) + m/60) * 289.02 / 24)
-# Minuti (Cerchio medio - 251.32)
 off_m = 251.32 - ((m + s/60) * 251.32 / 60)
-# Secondi (Cerchio interno - 213.62)
 off_s = 213.62 - (s * 213.62 / 60)
 
 st.markdown(f"""
@@ -130,6 +121,5 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Refresh ogni secondo per l'orario
 time.sleep(1)
 st.rerun()
