@@ -28,7 +28,7 @@ def get_aztec_data(current_time):
     ref_date = datetime(2024, 1, 1)
     delta_days = (current_time - ref_date).days
     
-    # Angoli rotazione (360 / unità)
+    # Calcolo angoli rotazione (360 / unità)
     angle_day = ((delta_days % 20) * 18)
     angle_month = (((delta_days % 365) // 20) * 20)
     angle_year = (((delta_days // 365) % 52) * 6.92)
@@ -47,7 +47,7 @@ def get_aztec_data(current_time):
         "days": countdown
     }
 
-# --- 2. STILE CSS (ZERO-FOOTPRINT PERSONALIZATION) ---
+# --- 2. STILE CSS (IL "VECCHIO" LOOK DEFINITIVO) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
@@ -89,7 +89,7 @@ az_data = get_aztec_data(now)
 
 # --- 4. INTERFACCIA ---
 
-# Header Logo (Spessore 0.5)
+# Header Logo (Spessore 0.5 costante)
 st.markdown(f"""
 <div class="header-container">
     <svg class="logo-laser" viewBox="0 0 100 100">
@@ -108,10 +108,10 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Radar
+# Radar Windy
 st.markdown(f'<div class="radar-box"><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Orologio Analogico (Tutto Spessore 0.5)
+# Orologio Analogico Azteco (Tutto Spessore 0.5)
 st.markdown(f"""
 <div class="analog-clock-container">
     <svg class="aztec-rings" viewBox="0 0 100 100">
