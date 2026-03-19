@@ -4,17 +4,16 @@ import pandas as pd
 import time
 from datetime import datetime, timedelta
 
-# --- 1. CONFIGURAZIONE E DATI ---
+# --- 1. CONFIGURAZIONE ---
 st.set_page_config(page_title="Ceredoleso Sniper", page_icon="🎯", layout="centered")
 
 @st.cache_data(ttl=600)
 def fetch_meteo():
     lat, lon = 45.6117, 10.9710
-    # Chiediamo 2 giorni di previsione per evitare l'IndexError a fine giornata
+    # Chiediamo 2 giorni per evitare errori di indice a mezzanotte
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=2"
     try:
-        r = requests.get(url)
-        return r.json()
+        return requests.get(url).json()
     except:
         return None
 
@@ -27,17 +26,19 @@ def get_aztec_context():
               "Ochpaniztli", "Teotleco", "Tepeilhuitl", "Quecholli", "Panquetzaliztli", "Atemoztli", "Tititl"]
     years = ["Acatl", "Tecpatl", "Calli", "Tochtli"]
 
-    today = datetime.now()
+    now = datetime.now()
     ref_date = datetime(2024, 1, 1)
-    delta_days = (today - ref_date).days
+    delta_days = (now - ref_date).days
     
     num_sacro = (delta_days % 13) + 1
     simbolo_sacro = symbols[(delta_days + 12) % 20]
-    month_idx = min(int(today.timetuple().tm_yday / 20), 17)
-    year_num = ((today.year - 2024 + 11) % 13) + 1
-    year_symbol = years[(today.year - 2024) % 4]
-    countdown = (datetime(2027, 11, 15) - today).days
+    month_idx = min(int(now.timetuple().tm_yday / 20), 17)
     
+    # 2026 = 1-Tochtli (Anno del Coniglio)
+    year_num = ((now.year - 2024 + 11) % 13) + 1
+    year_symbol = years[(now.year - 2024) % 4]
+    
+    countdown = (datetime(2027, 11, 15) - now).days
     return f"{num_sacro} {simbolo_sacro}", months[month_idx], f"{year_num} {year_symbol}", countdown
 
 # --- 2. STILE CSS ---
@@ -47,6 +48,7 @@ st.markdown("""
     .header-text { color:#00FFFF; font-size:20px; text-align:center; letter-spacing:4px; margin-bottom:15px; font-family:monospace; }
     .radar-box { position: relative; width: 100%; height: 350px; border-radius: 15px; border: 2px solid #333; overflow: hidden; margin-bottom: 20px; }
     .crosshair { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; border: 2px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
+    
     .aztec-wrapper {
         position: relative; width: 260px; height: 260px; margin: 20px auto; border-radius: 50%;
         background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png') center/cover;
@@ -57,9 +59,11 @@ st.markdown("""
         font-family: monospace; font-size: 24px; font-weight: bold; border: 1px solid #333; z-index: 5;
     }
     .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
-    .ring-circle { fill: none; stroke-linecap: round; }
+    .ring-circle { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
+    
     .aztec-info { text-align: center; margin-bottom: 20px; }
-    .aztec-day { color: #A52; font-size: 16px; font-family: monospace; font-weight: bold; text-transform: uppercase;}
+    .aztec-day { color: #A52; font-size: 16px; font-family: monospace; font-weight: bold; text-transform: uppercase; }
+    
     .xiuh-box { 
         text-align: center; margin: 10px auto; padding: 12px; border: 1px solid #600; 
         background: rgba(40,0,0,0.3); border-radius: 10px; max-width: 280px;
@@ -77,29 +81,35 @@ st.markdown('<div class="header-text">CEREDOLESO SNIPER</div>', unsafe_allow_htm
 # Radar
 st.markdown(f'<div class="radar-box"><div class="crosshair"></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Timeline 6h protetta da IndexError
+# Timeline 6h
 if fc and 'hourly' in fc:
     cols = st.columns(6)
     h_now = datetime.now().hour
-    # Usiamo il modulo % per non eccedere la lunghezza della lista o fetchiamo 2 giorni
     for i in range(6):
         idx = h_now + i
         if idx < len(fc['hourly']['precipitation_probability']):
             with cols[i]:
                 p = fc['hourly']['precipitation_probability'][idx]
-                time_str = fc['hourly']['time'][idx][-5:]
-                st.markdown(f"<div style='text-align:center; font-size:10px;'>{time_str}<br><b style='color:{'#F31' if p > 30 else '#0F0'}'>{p}%</b></div>", unsafe_allow_html=True)
+                time_label = fc['hourly']['time'][idx][-5:]
+                st.markdown(f"<div style='text-align:center; font-size:10px;'>{time_label}<br><b style='color:{'#F31' if p > 30 else '#0F0'}'>{p}%</b></div>", unsafe_allow_html=True)
 
-# Orologio e Countdown
-n = datetime.now()
-s = n.second
-off_h = 289.02 - (((n.hour % 24) + n.minute/60) * 289.02 / 24)
-off_m = 251.32 - ((n.minute + s/60) * 251.32 / 60)
+# Logica Orologio in Tempo Reale
+now = datetime.now()
+s = now.second
+m = now.minute
+h = now.hour
+
+# Calcolo Dashoffset per i cerchi (SVG Circumference)
+# Ore (Cerchio esterno - 289.02)
+off_h = 289.02 - (((h % 24) + m/60) * 289.02 / 24)
+# Minuti (Cerchio medio - 251.32)
+off_m = 251.32 - ((m + s/60) * 251.32 / 60)
+# Secondi (Cerchio interno - 213.62)
 off_s = 213.62 - (s * 213.62 / 60)
 
 st.markdown(f"""
 <div class="aztec-wrapper">
-    <div class="digital-clock">{n.strftime("%H:%M")}<span style="color:#F31; font-size:16px;">:{s:02d}</span></div>
+    <div class="digital-clock">{now.strftime("%H:%M")}<span style="color:#F31; font-size:16px;">:{s:02d}</span></div>
     <svg class="rings-svg" viewBox="0 0 100 100">
         <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.3"/>
         <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.5"/>
@@ -120,5 +130,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# Refresh ogni secondo per l'orario
 time.sleep(1)
 st.rerun()
