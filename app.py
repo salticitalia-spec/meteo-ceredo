@@ -28,7 +28,6 @@ def get_aztec_data(current_time):
     ref_date = datetime(2024, 1, 1)
     delta_days = (current_time - ref_date).days
     
-    # Calcolo angoli rotazione (360 / unità)
     angle_day = ((delta_days % 20) * 18)
     angle_month = (((delta_days % 365) // 20) * 20)
     angle_year = (((delta_days // 365) % 52) * 6.92)
@@ -47,12 +46,11 @@ def get_aztec_data(current_time):
         "days": countdown
     }
 
-# --- 2. STILE CSS (IL "VECCHIO" LOOK DEFINITIVO) ---
+# --- 2. STILE CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
     .stApp { background-color:#000; color: #eee; }
-    
     .header-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; }
     .logo-laser { width: 140px; height: 140px; margin-bottom: 10px; }
     .header-text { 
@@ -60,24 +58,14 @@ st.markdown("""
         text-transform: uppercase; background: linear-gradient(90deg, #8A2BE2 0%, #007BFF 100%);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    
     .radar-box { width: 100%; height: 380px; border: 1px solid #111; border-radius: 4px; overflow: hidden; margin-bottom: 30px; }
-    
-    .analog-clock-container {
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        position: relative; width: 100%; padding-bottom: 60px;
-    }
+    .analog-clock-container { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; width: 100%; padding-bottom: 60px; }
     .aztec-rings { width: 300px; height: 300px; }
-    
-    .digital-overlay {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -150%);
-        text-align: center; font-family: 'Inter', sans-serif;
-    }
+    .digital-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -150%); text-align: center; font-family: 'Inter', sans-serif; }
     .time-hours { color: #ffffff; font-size: 38px; font-weight: 100; }
     .time-minutes { color: #007BFF; font-size: 38px; font-weight: 100; }
     .time-seconds { color: #8A2BE2; font-size: 18px; font-weight: 100; margin-left: 4px; }
     .time-separator { color: #222; font-size: 30px; padding: 0 4px; }
-
     .aztec-text-sub { color: #444; font-size: 11px; letter-spacing: 3px; margin-top: 150px; text-transform: uppercase; text-align: center; }
     .cd-reset { color: #8A2BE2; font-size: 11px; letter-spacing: 5px; opacity: 0.4; margin-top: 15px; }
 </style>
@@ -88,8 +76,6 @@ now = datetime.now() + timedelta(hours=1)
 az_data = get_aztec_data(now)
 
 # --- 4. INTERFACCIA ---
-
-# Header Logo (Spessore 0.5 costante)
 st.markdown(f"""
 <div class="header-container">
     <svg class="logo-laser" viewBox="0 0 100 100">
@@ -108,29 +94,22 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Radar Windy
 st.markdown(f'<div class="radar-box"><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Orologio Analogico Azteco (Tutto Spessore 0.5)
 st.markdown(f"""
 <div class="analog-clock-container">
     <svg class="aztec-rings" viewBox="0 0 100 100">
         <circle cx="50" cy="50" r="46" stroke="#1a1a1a" stroke-width="0.5" fill="none" />
         <line x1="50" y1="2" x2="50" y2="10" stroke="#8A2BE2" stroke-width="0.5" transform="rotate({az_data['angles'][2]} 50 50)" />
-        
         <circle cx="50" cy="50" r="36" stroke="#1a1a1a" stroke-width="0.5" fill="none" />
         <line x1="50" y1="12" x2="50" y2="20" stroke="#007BFF" stroke-width="0.5" transform="rotate({az_data['angles'][1]} 50 50)" />
-        
         <circle cx="50" cy="50" r="26" stroke="#1a1a1a" stroke-width="0.5" fill="none" />
         <line x1="50" y1="22" x2="50" y2="30" stroke="#ffffff" stroke-width="0.5" transform="rotate({az_data['angles'][0]} 50 50)" />
-        
         <path d="M50 45 L50 55 M45 50 L55 50" stroke="url(#g)" stroke-width="0.5" opacity="0.6" />
     </svg>
-    
     <div class="digital-overlay">
         <span class="time-hours">{now.strftime("%H")}</span><span class="time-separator">:</span><span class="time-minutes">{now.strftime("%M")}</span><span class="time-seconds">{now.strftime("%S")}</span>
     </div>
-    
     <div class="aztec-text-sub">{az_data['label']}</div>
     <div class="cd-reset">{az_data['days']} DAYS TO RESET</div>
 </div>
