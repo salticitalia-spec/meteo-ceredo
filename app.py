@@ -1,118 +1,124 @@
 import streamlit as st
 import requests
+import pandas as pd
 import time
 from datetime import datetime, timedelta
 
-# --- 1. CONFIGURAZIONE PAGINA ---
-st.set_page_config(page_title="Ceredotlan Tlachieloni", page_icon="🎯", layout="centered")
+# --- 1. CONFIGURAZIONE E DATI ---
+st.set_page_config(page_title="Ceredoleso Sniper", page_icon="🎯", layout="centered")
 
 @st.cache_data(ttl=600)
 def fetch_meteo():
     lat, lon = 45.6117, 10.9710
+    # Chiediamo 2 giorni di previsione per evitare l'IndexError a fine giornata
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=2"
     try:
-        response = requests.get(url, timeout=5)
-        return response.json()
+        r = requests.get(url)
+        return r.json()
     except:
         return None
 
-def get_aztec_data(current_time):
+def get_aztec_context():
     symbols = ["Cipactli", "Ehecatl", "Calli", "Cuetzpalin", "Coatl", "Miquiztli", "Mazatl", "Tochtli", 
                "Atl", "Itzcuintli", "Ozomatli", "Malinalli", "Acatl", "Ocelotl", "Quauhtli", "Cozcaquauhtli", 
                "Olin", "Tecpatl", "Quiahuitl", "Xochitl"]
     months = ["Izcalli", "Atlcahualo", "Tlacaxipehualiztli", "Tozoztontli", "Huey Tozoztli", "Toxcatl", 
               "Etzalcualiztli", "Tecuilhuitontli", "Huey Tecuilhuitl", "Tlaxochimaco", "Xocotl Huetzi", 
               "Ochpaniztli", "Teotleco", "Tepeilhuitl", "Quecholli", "Panquetzaliztli", "Atemoztli", "Tititl"]
-    year_carriers = ["Tecpatl", "Calli", "Tochtli", "Acatl"]
-    
-    ref_date = datetime(2024, 1, 1)
-    delta_days = (current_time - ref_date).days
-    
-    # Angoli rotazione millimetrici
-    angle_day = ((delta_days % 20) * 18)
-    angle_month = (((delta_days % 365) // 20) * 20)
-    angle_year = (((delta_days // 365) % 52) * 6.92)
-    
-    num_day = (delta_days % 13) + 1
-    sym_day = symbols[(delta_days + 12) % 20]
-    current_month = months[min((delta_days % 365) // 20, 17)]
-    year_num = ((delta_days // 365) % 13) + 1
-    year_sym = year_carriers[(delta_days // 365) % 4]
-    
-    countdown = (datetime(2027, 11, 15) - current_time).days
-    
-    return {
-        "angles": [angle_day, angle_month, angle_year],
-        "label": f"{num_day} {sym_day} • {current_month} • {year_num} {year_sym}",
-        "days": countdown
-    }
+    years = ["Acatl", "Tecpatl", "Calli", "Tochtli"]
 
-# --- 2. STILE CSS (VERSIONE IERI SERA) ---
+    today = datetime.now()
+    ref_date = datetime(2024, 1, 1)
+    delta_days = (today - ref_date).days
+    
+    num_sacro = (delta_days % 13) + 1
+    simbolo_sacro = symbols[(delta_days + 12) % 20]
+    month_idx = min(int(today.timetuple().tm_yday / 20), 17)
+    year_num = ((today.year - 2024 + 11) % 13) + 1
+    year_symbol = years[(today.year - 2024) % 4]
+    countdown = (datetime(2027, 11, 15) - today).days
+    
+    return f"{num_sacro} {simbolo_sacro}", months[month_idx], f"{year_num} {year_symbol}", countdown
+
+# --- 2. STILE CSS ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100&display=swap');
     .stApp { background-color:#000; color: #eee; }
-    .header-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; }
-    .logo-laser { width: 140px; height: 140px; margin-bottom: 10px; }
-    .header-text { 
-        font-family: 'Inter', sans-serif; font-weight: 100; font-size: 24px; letter-spacing: 2px; 
-        text-transform: uppercase; background: linear-gradient(90deg, #8A2BE2 0%, #007BFF 100%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .header-text { color:#00FFFF; font-size:20px; text-align:center; letter-spacing:4px; margin-bottom:15px; font-family:monospace; }
+    .radar-box { position: relative; width: 100%; height: 350px; border-radius: 15px; border: 2px solid #333; overflow: hidden; margin-bottom: 20px; }
+    .crosshair { position: absolute; top: 50%; left: 50%; width: 40px; height: 40px; border: 2px solid #FF0000; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none; }
+    .aztec-wrapper {
+        position: relative; width: 260px; height: 260px; margin: 20px auto; border-radius: 50%;
+        background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piedra_del_Sol.png/600px-Piedra_del_Sol.png') center/cover;
+        filter: sepia(0.3) brightness(0.7); display: flex; align-items: center; justify-content: center; border: 2px solid #222;
     }
-    .radar-box { width: 100%; height: 380px; border: 1px solid #111; border-radius: 4px; overflow: hidden; margin-bottom: 30px; }
-    .analog-clock-container { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; width: 100%; padding-bottom: 60px; }
-    .aztec-rings { width: 300px; height: 300px; }
-    .digital-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -150%); text-align: center; font-family: 'Inter', sans-serif; }
-    .time-hours { color: #ffffff; font-size: 38px; font-weight: 100; }
-    .time-minutes { color: #007BFF; font-size: 38px; font-weight: 100; }
-    .time-seconds { color: #8A2BE2; font-size: 18px; font-weight: 100; margin-left: 4px; }
-    .time-separator { color: #222; font-size: 30px; padding: 0 4px; }
-    .aztec-text-sub { color: #444; font-size: 11px; letter-spacing: 3px; margin-top: 150px; text-transform: uppercase; text-align: center; }
-    .cd-reset { color: #8A2BE2; font-size: 11px; letter-spacing: 5px; opacity: 0.4; margin-top: 15px; }
+    .digital-clock {
+        background: rgba(0,0,0,0.85); padding: 5px 12px; border-radius: 8px; color: #fff;
+        font-family: monospace; font-size: 24px; font-weight: bold; border: 1px solid #333; z-index: 5;
+    }
+    .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-circle { fill: none; stroke-linecap: round; }
+    .aztec-info { text-align: center; margin-bottom: 20px; }
+    .aztec-day { color: #A52; font-size: 16px; font-family: monospace; font-weight: bold; text-transform: uppercase;}
+    .xiuh-box { 
+        text-align: center; margin: 10px auto; padding: 12px; border: 1px solid #600; 
+        background: rgba(40,0,0,0.3); border-radius: 10px; max-width: 280px;
+    }
+    .xiuh-days { color: #F00; font-family: monospace; font-size: 24px; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. LOGICA ---
-now = datetime.now() + timedelta(hours=1)
-az_data = get_aztec_data(now)
+# --- 3. UI ---
+fc = fetch_meteo()
+day_lab, month_lab, year_lab, count_val = get_aztec_context()
 
-# --- 4. INTERFACCIA ---
-# Logo Laser
-st.markdown(f"""
-<div class="header-container">
-    <svg class="logo-laser" viewBox="0 0 100 100">
-        <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#8A2BE2" /><stop offset="100%" style="stop-color:#007BFF" /></linearGradient></defs>
-        <circle cx="50" cy="50" r="48" stroke="url(#g)" stroke-width="0.5" fill="none" />
-        <circle cx="50" cy="50" r="40" stroke="url(#g)" stroke-width="0.5" fill="none" stroke-dasharray="2 2" opacity="0.5"/>
-        <path d="M50 0 L50 100 M0 50 L100 50" stroke="url(#g)" stroke-width="0.5" opacity="0.3"/>
-        <circle cx="50" cy="50" r="12" stroke="url(#g)" stroke-width="0.5" fill="none"/>
-        <circle cx="50" cy="50" r="2.5" fill="url(#g)"/>
-    </svg>
-    <h1 class="header-text">Ceredotlan Tlachieloni</h1>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="header-text">CEREDOLESO SNIPER</div>', unsafe_allow_html=True)
 
 # Radar
-st.markdown(f'<div class="radar-box"><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="radar-box"><div class="crosshair"></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=9&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
-# Orologio Azteco a Cerchi Concentrici (SPESSORE 0.5)
+# Timeline 6h protetta da IndexError
+if fc and 'hourly' in fc:
+    cols = st.columns(6)
+    h_now = datetime.now().hour
+    # Usiamo il modulo % per non eccedere la lunghezza della lista o fetchiamo 2 giorni
+    for i in range(6):
+        idx = h_now + i
+        if idx < len(fc['hourly']['precipitation_probability']):
+            with cols[i]:
+                p = fc['hourly']['precipitation_probability'][idx]
+                time_str = fc['hourly']['time'][idx][-5:]
+                st.markdown(f"<div style='text-align:center; font-size:10px;'>{time_str}<br><b style='color:{'#F31' if p > 30 else '#0F0'}'>{p}%</b></div>", unsafe_allow_html=True)
+
+# Orologio e Countdown
+n = datetime.now()
+s = n.second
+off_h = 289.02 - (((n.hour % 24) + n.minute/60) * 289.02 / 24)
+off_m = 251.32 - ((n.minute + s/60) * 251.32 / 60)
+off_s = 213.62 - (s * 213.62 / 60)
+
 st.markdown(f"""
-<div class="analog-clock-container">
-    <svg class="aztec-rings" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="46" stroke="#1a1a1a" stroke-width="0.5" fill="none" />
-        <line x1="50" y1="2" x2="50" y2="10" stroke="#8A2BE2" stroke-width="0.5" transform="rotate({az_data['angles'][2]} 50 50)" />
-        <circle cx="50" cy="50" r="36" stroke="#1a1a1a" stroke-width="0.5" fill="none" />
-        <line x1="50" y1="12" x2="50" y2="20" stroke="#007BFF" stroke-width="0.5" transform="rotate({az_data['angles'][1]} 50 50)" />
-        <circle cx="50" cy="50" r="26" stroke="#1a1a1a" stroke-width="0.5" fill="none" />
-        <line x1="50" y1="22" x2="50" y2="30" stroke="#ffffff" stroke-width="0.5" transform="rotate({az_data['angles'][0]} 50 50)" />
-        <path d="M50 45 L50 55 M45 50 L55 50" stroke="url(#g)" stroke-width="0.5" opacity="0.6" />
+<div class="aztec-wrapper">
+    <div class="digital-clock">{n.strftime("%H:%M")}<span style="color:#F31; font-size:16px;">:{s:02d}</span></div>
+    <svg class="rings-svg" viewBox="0 0 100 100">
+        <circle class="ring-circle" cx="50" cy="50" r="46" stroke="#00FFFF" stroke-width="2" stroke-dasharray="289.02" stroke-dashoffset="{off_h}" opacity="0.3"/>
+        <circle class="ring-circle" cx="50" cy="50" r="40" stroke="#007FFF" stroke-width="2" stroke-dasharray="251.32" stroke-dashoffset="{off_m}" opacity="0.5"/>
+        <circle class="ring-circle" cx="50" cy="50" r="34" stroke="#FF3311" stroke-width="2" stroke-dasharray="213.62" stroke-dashoffset="{off_s}" opacity="0.7"/>
     </svg>
-    <div class="digital-overlay">
-        <span class="time-hours">{now.strftime("%H")}</span><span class="time-separator">:</span><span class="time-minutes">{now.strftime("%M")}</span><span class="time-seconds">{now.strftime("%S")}</span>
-    </div>
-    <div class="aztec-text-sub">{az_data['label']}</div>
-    <div class="cd-reset">{az_data['days']} DAYS TO RESET</div>
+</div>
+<div style="text-align:center; color:#444; font-size:10px; letter-spacing:4px; font-weight:bold; margin-top:-10px;">TIEMPO ETERNO DE CEREDO</div>
+
+<div class="aztec-info">
+    <div class="aztec-day">{day_lab}</div>
+    <div style="color:#666; font-size:10px; font-family:monospace;">METZTLI: {month_lab} | XIHUATL: {year_lab}</div>
+</div>
+
+<div class="xiuh-box">
+    <div style="color:#844; font-size:9px; letter-spacing:2px;">ATTESA XIUHMOLPILLI</div>
+    <div class="xiuh-days">{count_val} GIORNI</div>
+    <div style="color:#600; font-size:8px;">AL SACRIFICIO DEL FUOCO NUOVO</div>
 </div>
 """, unsafe_allow_html=True)
 
-time.sleep(1
+time.sleep(1)
+st.rerun()
