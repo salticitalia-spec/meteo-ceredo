@@ -10,7 +10,6 @@ st.set_page_config(page_title="Ceredoleso Yollotl", page_icon="❤️", layout="
 @st.cache_data(ttl=600)
 def fetch_meteo():
     lat, lon = 45.6117, 10.9710
-    # Previsioni a 2 giorni per evitare IndexError a mezzanotte
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=precipitation_probability&models=icon_seamless&timezone=Europe%2FRome&forecast_days=2"
     try:
         r = requests.get(url, timeout=5)
@@ -22,11 +21,9 @@ def fetch_meteo():
 @st.cache_data(ttl=3600)
 def fetch_historical():
     lat, lon = 45.6117, 10.9710
-    # L'archivio arriva fino a ieri. Oggi non è ancora "storia".
     yesterday = datetime.now() - timedelta(days=1)
     start_date = (yesterday - timedelta(days=9)).strftime('%Y-%m-%d')
     end_date = yesterday.strftime('%Y-%m-%d')
-    
     url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&start_date={start_date}&end_date={end_date}&daily=precipitation_sum&timezone=Europe%2FRome"
     try:
         r = requests.get(url, timeout=5)
@@ -43,18 +40,15 @@ def get_aztec_context():
               "Etzalcualiztli", "Tecuilhuitontli", "Huey Tecuilhuitl", "Tlaxochimaco", "Xocotl Huetzi", 
               "Ochpaniztli", "Teotleco", "Tepeilhuitl", "Quecholli", "Panquetzaliztli", "Atemoztli", "Tititl"]
     years = ["Acatl", "Tecpatl", "Calli", "Tochtli"]
-
     today = datetime.now()
     ref_date = datetime(2024, 1, 1)
     delta_days = (today - ref_date).days
-    
     num_sacro = (delta_days % 13) + 1
     simbolo_sacro = symbols[(delta_days + 12) % 20]
     month_idx = min(int(today.timetuple().tm_yday / 20), 17)
     year_num = ((today.year - 2024 + 11) % 13) + 1
     year_symbol = years[(today.year - 2024) % 4]
     countdown = (datetime(2027, 11, 15) - today).days
-    
     return f"{num_sacro} {simbolo_sacro}", months[month_idx], f"{year_num} {year_symbol}", countdown
 
 # --- 2. STILE CSS ---
@@ -74,6 +68,9 @@ st.markdown("""
     .digital-clock { background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 8px; color: #fff; font-family: monospace; font-size: 20px; border: 1px solid #400; z-index: 5; }
     .rings-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
     .xiuh-box { text-align: center; margin: 10px auto; padding: 12px; border: 1px solid #800; background: rgba(50,0,0,0.2); border-radius: 10px; max-width: 260px; }
+    .legend-box { border-top: 1px solid #300; margin-top: 10px; padding-top: 10px; font-family: monospace; font-size: 10px; color: #555; text-align: center; }
+    .legend-item { margin-bottom: 4px; }
+    .nahuatl-term { color: #800; font-weight: bold; text-transform: uppercase; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -85,7 +82,7 @@ day_lab, month_lab, year_lab, count_val = get_aztec_context()
 st.markdown('<div class="header-text">CEREDOLESO YOLLOTL</div>', unsafe_allow_html=True)
 st.markdown('<div style="text-align:center; margin-bottom:15px;"><span style="color:#600; font-size:10px; letter-spacing:3px; font-weight:bold;">EL CORAZÓN DEL SACRIFICIO</span></div>', unsafe_allow_html=True)
 
-# Radar principale
+# Radar
 st.markdown(f'<div class="radar-box"><div class="crosshair"></div><iframe src="https://embed.windy.com/embed2.html?lat=45.6117&lon=10.9710&zoom=10&overlay=rain&product=iconEu&marker=true" width="100%" height="100%" frameborder="0"></iframe></div>', unsafe_allow_html=True)
 
 # Timeline 6h
@@ -100,10 +97,9 @@ if fc and 'hourly' in fc:
             color = '#FF3311' if prob > 30 else '#00FFCC'
             with cols[i]:
                 st.markdown(f"<div style='text-align:center; font-size:10px; font-family:monospace;'>{t_str}<br><b style='color:{color}'>{prob}%</b></div>", unsafe_allow_html=True)
-        except (IndexError, KeyError):
-            continue
+        except (IndexError, KeyError): continue
 
-# Orologio e Cerchi SVG
+# Orologio e Cerchi
 n = datetime.now()
 s = n.second
 off_h = 289.02 - (((n.hour % 24) + n.minute/60) * 289.02 / 24)
@@ -126,17 +122,23 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# --- STORICO 10 GIORNI (MEMORIA) ---
+# --- STORICO CON LEGENDA AZTECA ---
 if hist and 'daily' in hist:
-    st.markdown("<div style='color:#444; font-size:9px; letter-spacing:3px; text-align:center; margin-top:15px;'>MEMORIA DEL SANGUE (MM PIOGGIA)</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#444; font-size:9px; letter-spacing:3px; text-align:center; margin-top:20px;'>MEMORIA DEL SANGUE (MM PIOGGIA)</div>", unsafe_allow_html=True)
     df_hist = pd.DataFrame({
-        'Giorno': [d[-5:] for d in hist['daily']['time']],
+        'Día': [d[-5:] for d in hist['daily']['time']],
         'Pioggia': hist['daily']['precipitation_sum']
-    }).set_index('Giorno')
+    }).set_index('Día')
     
-    if not df_hist.empty:
-        st.bar_chart(df_hist, color='#800', height=180)
+    st.bar_chart(df_hist, color='#800', height=160)
 
-# Refresh
+    st.markdown("""
+    <div class="legend-box">
+        <div class="legend-item"><span class="nahuatl-term">EZTLI</span> — <span style="font-style:italic;">Sangre (Lluvia acumulada)</span></div>
+        <div class="legend-item"><span class="nahuatl-term">CE-YALHUA</span> — <span style="font-style:italic;">Memoria de los diez soles pasados</span></div>
+        <div class="legend-item"><span class="nahuatl-term">TLALOC</span> — <span style="font-style:italic;">Ofrenda recibida por la tierra</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+
 time.sleep(1)
 st.rerun()
